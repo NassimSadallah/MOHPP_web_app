@@ -49,8 +49,16 @@ def defineObstacles( r, r2): #on definit les noeuds qui sont des obstacle
             else:
                 GridMap[l][c].OBSTACLE = NO_OBSTACLE       
                 
-
-def processMap( r, r2, binaryMap):
+'''
+    SEQ is a variable which defines if the algorithm is parallelized or not:
+        seq=0: one block execution
+        seq=1: use sequenced list of nodes (shorter lenghth to reduce the computation time)
+        seq=2: use multi threading (not tested yet)
+        seq=3: use multiprocesses on a CPU (not finished)
+        seq=4: use multiprocesses on a GPU (not finished)
+                                                                
+'''
+def processMap( r, r2, binaryMap, seq = 0):
     global tabGrid, GridMap
     tabGrid = [[0 for i in range(r)] for j in range(r2)]
     GridMap = [[0 for i in range(r)] for j in range(r2)]
