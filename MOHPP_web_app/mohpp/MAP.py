@@ -51,7 +51,7 @@ def defineObstacles( r, r2): #on definit les noeuds qui sont des obstacle
                 
 '''
     SEQ is a variable which defines if the algorithm is parallelized or not:
-        seq=0: one block execution
+        seq=0: one block execution (default value)
         seq=1: use sequenced list of nodes (shorter lenghth to reduce the computation time)
         seq=2: use multi threading (not tested yet)
         seq=3: use multiprocesses on a CPU (not finished)
