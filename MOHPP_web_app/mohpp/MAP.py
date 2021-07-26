@@ -56,9 +56,10 @@ def defineObstacles( r, r2): #on definit les noeuds qui sont des obstacle
         seq=2: use multi threading (not tested yet)
         seq=3: use multiprocesses on a CPU (not finished)
         seq=4: use multiprocesses on a GPU (not finished)
+        nbr_blocks>=0: is the number of blocks that you want to use to parallelize the computation (do not split up the map)
                                                                 
 '''
-def processMap( r, r2, binaryMap, seq = 0):
+def processMap( r, r2, binaryMap, seq = 0, nbr_blocks = 0):
     global tabGrid, GridMap
     tabGrid = [[0 for i in range(r)] for j in range(r2)]
     GridMap = [[0 for i in range(r)] for j in range(r2)]
