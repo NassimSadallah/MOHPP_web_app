@@ -1,3 +1,4 @@
+#MOHPP dronekit web app
 This paper presents a multi-objective hybrid path planning method MOHPP for Unmanned Aerial Vehicles (UAVs) in urban dynamic environments.Two objectives are considered: the safety level and the travel time. First, we
 construct two models of obstacles; static and dynamic. The static obstacles model
 is based on Fast Marching Square (FM²) method to deal with the uncertainty of
