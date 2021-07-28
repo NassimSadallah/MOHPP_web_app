@@ -22,10 +22,11 @@ d_ = [width, width*height]
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 
-#reads the binary map and process it.
+#reads the binary map path
 binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
 
-Nodes, srcObs = MAP.processMap(width, height, binMap)
+#defines the obstacles and return the corresponding indexed node list
+Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
 
 #gets the corresponding indices of the cells start and goal
 start_index = utilities.coordinatesToIndex(start_coordinates, d_)
@@ -33,7 +34,7 @@ goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
 
 
 #computes the velocity and the travel time at each node of the map
-CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_)
+CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_, seq=1,block=block)
 wavePlot(d_[0], d_[1]/d_[0], CDM)
 globalPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
 

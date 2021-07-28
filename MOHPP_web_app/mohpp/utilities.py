@@ -6,6 +6,7 @@ Created on Jul 8, 2021
 from math import floor, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
+from heapq import heappop
 
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -80,3 +81,22 @@ def wavePlot(r, r2,nodes):
     
     plt.imshow(zVelocity, cmap='Greys',  interpolation='nearest')
     plt.show()    
+
+def isEmptyList(l):
+    
+    for i in l:
+        if i !=[]:
+            return False
+        
+    return True
+
+def locateBestIdx(l):
+
+    b =(INFINI,INFINI)
+    ids = 0
+    for co,i in enumerate(l):
+        if i !=[] and i[0]<b:
+            b = i[0]
+            ids = co
+    
+    return heappop(l[ids])
