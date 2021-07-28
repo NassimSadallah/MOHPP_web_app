@@ -15,6 +15,7 @@ class node():# class node
         self.cost = 99999999999.0
         self.type ='F'
         self.v = 1.0
+        self.block = 0
         self.indice = -1
         self.cros = False
         self.TAG = None

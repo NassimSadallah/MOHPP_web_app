@@ -7,14 +7,14 @@ from __builtin__ import False
 import time
 from math import floor, sqrt
 from heapq import _siftdown, heappop, heappush
-from utilities import FORBIDDEN, INFINI, NEW_FORBIDDEN
+from utilities import isEmptyList, locateBestIdx, FORBIDDEN, INFINI, NEW_FORBIDDEN
 
 class fmm(object):
     '''
     Fast Marching method with (8 and/or 16 neighbors )
     '''
     
-    def __init__(self, start_points = [], goal = None, nodesList = [], d_ = [], cross = False, heuristicActivate = False):
+    def __init__(self, start_points = [], goal = None, nodesList = [], d_ = [], cross = False, heuristicActivate = False, seq = 0, block = 0):
         
         self.d_ = d_
         self.narrowBand = []
@@ -26,14 +26,20 @@ class fmm(object):
         self.nodesList = nodesList
         self.cross = cross
         self.heuristicActivate = heuristicActivate
-
+        #self.seq = seq
+        self.block = block
         if self.cross:
             self.neighborsList = [-1 for _ in range(8)]
             
         else:
             self.neighborsList = [-1 for _ in range(4)]
         self.minneighborsList = [-1 for _ in range(2)]
-
+        
+        if seq == 0:
+            self.processFMM()
+        elif seq == 1:
+            self.processSequentialFMM()
+        
     
     def getneighbors(self,idx):        
         self.nbr_neighbors = 0
@@ -307,6 +313,7 @@ class fmm(object):
         '''
         main loop over the node list
         '''
+        initime = time.time()
         while self.narrowBand !=[] and not self.stopWave:
 
             itera+=1
@@ -340,6 +347,57 @@ class fmm(object):
         
             if idxMin == self.goal:
                 self.stopWave = True                    
-            
+        print 'seq 0:',time.time()-initime,'seconds '    
         return self.nodesList    
-              
+    
+    def processSequentialFMM(self):
+
+        blk_nodes = [[] for _ in range(self.block)]
+        '''
+        initialization of the starting nodes over the blocks
+        '''      
+        
+        for i in self.start_points:
+            self.nodesList[i].cost = 0
+            heappush(blk_nodes[self.nodesList[i].block - 1], (self.nodesList[i].cost, i))
+        EmptyList = isEmptyList(blk_nodes)
+        '''
+        main loop over the node list
+        '''
+        initime = time.time()
+        while not EmptyList and not self.stopWave:
+
+            best = locateBestIdx(blk_nodes)
+            idxMin = best[1]
+            neighbors = self.getneighbors(idxMin)
+            self.nodesList[idxMin].type = 'A'
+            
+            for j in neighbors:
+                
+                if j==-1:
+                    continue
+                 
+                current = self.nodesList[j]
+             
+                if current.type == 'A' or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                    continue 
+               
+                cost = self.SolveEikonal(j, current.cros)
+                
+                if blk_nodes[current.block - 1].__contains__((current.cost,j)):
+                    
+                    if cost<current.cost:
+                        indexe = blk_nodes[current.block - 1].index((current.cost,j))
+                        current.cost = cost 
+                        _siftdown(blk_nodes[current.block - 1],0,indexe)            
+                else:            
+                    current.cost = cost
+                    current.type = 'N'
+                    heappush(blk_nodes[current.block - 1],(cost,j))
+            
+            EmptyList = isEmptyList(blk_nodes)
+            
+            if idxMin == self.goal:
+                self.stopWave = True                    
+        print time.time() - initime, 'seconds'    
+        return self.nodesList                

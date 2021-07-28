@@ -3,7 +3,7 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
-
+import time
 from PIL import Image
 from Node import node
 from utilities import FORBIDDEN, NO_OBSTACLE, KNOWN_OBSTACLE, UNDETECTED_OBSTACLE
@@ -13,6 +13,7 @@ tabGrid, GridMap = [],[]
 '''
 Read a binary map with static obstacles
 The image should be at the same package as the current script
+r, r2 are respectively width and the height of the matrix
 '''
 
 def readMap(r, r2,binaryMap):
@@ -34,9 +35,9 @@ def readMap(r, r2,binaryMap):
                 tabGrid[x][y] = -1
            
 '''   
-define which pixels are refering to the obstacles
+define which pixels are referring to the obstacles
 ''' 
-def defineObstacles( r, r2): #on definit les noeuds qui sont des obstacle
+def defineObstacles(r, r2): #defines the obstacle nodes
     
     for l in range(r2):
         for c in range(r):
@@ -48,7 +49,33 @@ def defineObstacles( r, r2): #on definit les noeuds qui sont des obstacle
                 
             else:
                 GridMap[l][c].OBSTACLE = NO_OBSTACLE       
-                
+
+'''
+Split up the GridMap into n blocks,
+and defines the corresponding block number for each node 
+'''
+def blockSegmentation(r, r2, nbrBlock):
+    
+    blkPerCoord = nbrBlock**(1.0/2)
+    subResolu, subResolu2 = [], []
+    blkLenght_r = int(r/blkPerCoord)
+    blkLenght_r2 = int(r2/blkPerCoord)
+    
+    for i in range(int(float(str(blkPerCoord)))):
+        subResolu.append((blkLenght_r*i, blkLenght_r*(i+1)))
+        subResolu2.append((blkLenght_r2*i, blkLenght_r2*(i+1))) 
+    
+    blk_nbr = 0
+    
+    for i in subResolu:
+        for j in subResolu2:
+            for x in range(i[0], i[1]):
+                for y in range(j[0], j[1]):
+                    GridMap[y][x].block = blk_nbr
+            blk_nbr+=1    
+    print 'blk per axe:', len(subResolu), len(subResolu2), 'total blk:', blk_nbr
+    return blk_nbr
+              
 '''
     SEQ is a variable which defines if the algorithm is parallelized or not:
         seq=0: one block execution (default value)
@@ -77,6 +104,9 @@ def processMap( r, r2, binaryMap, seq = 0, nbr_blocks = 0):
     
     defineObstacles(r,r2)
     
+    blk_nbr = 0 
+    if seq == 1:
+        blk_nbr = blockSegmentation(r, r2, nbr_blocks)
     '''
     define the obstacle nodes and index them & return the indexed list of all map's nodes
     '''
@@ -91,7 +121,8 @@ def processMap( r, r2, binaryMap, seq = 0, nbr_blocks = 0):
             num+=1
     
     print('                    MAP ready !')
-    return nodeList, srcObstacles
+    
+    return nodeList, srcObstacles, blk_nbr
         
         
                    
