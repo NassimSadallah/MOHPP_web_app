@@ -86,7 +86,7 @@ def blockSegmentation(r, r2, nbrBlock):
         nbr_blocks>=0: is the number of blocks that you want to use to parallelize the computation (default: do not split up the map)
                                                                 
 '''
-def processMap( r, r2, binaryMap, seq = 0, nbr_blocks = 0):
+def processMap( r, r2, binaryMap, seq = 0, nbr_blocks=0):
     global tabGrid, GridMap
     tabGrid = [[0 for i in range(r)] for j in range(r2)]
     GridMap = [[0 for i in range(r)] for j in range(r2)]

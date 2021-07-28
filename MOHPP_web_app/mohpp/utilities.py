@@ -87,16 +87,16 @@ def isEmptyList(l):
     for i in l:
         if i !=[]:
             return False
-        
+    #default True    
     return True
 
 def locateBestIdx(l):
-
+    
     b =(INFINI,INFINI)
     ids = 0
     for co,i in enumerate(l):
         if i !=[] and i[0]<b:
             b = i[0]
             ids = co
-    
+    #return the popped best element in the hosting list
     return heappop(l[ids])
