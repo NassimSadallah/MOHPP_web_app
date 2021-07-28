@@ -22,7 +22,7 @@ d_ = [width, width*height]
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 
-#reads the binary map path
+#reads the binary map from the path
 binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
 
 #defines the obstacles and return the corresponding indexed node list

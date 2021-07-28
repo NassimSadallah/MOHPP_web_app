@@ -7,8 +7,8 @@ from __builtin__ import False
 import time
 from math import floor, sqrt
 from heapq import _siftdown, heappop, heappush
-from utilities import isEmptyList, locateBestIdx, FORBIDDEN, INFINI, NEW_FORBIDDEN
-
+from utilities import FORBIDDEN, INFINI, NEW_FORBIDDEN
+from utilities import isEmptyList, locateBestIdx
 class fmm(object):
     '''
     Fast Marching method with (8 and/or 16 neighbors )
