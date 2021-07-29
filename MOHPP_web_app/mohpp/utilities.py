@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
 
+
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
 KNOWN_OBSTACLE = 1

@@ -22,3 +22,4 @@ def cmdTakeOff(h, UAV):
 
 def move_InDirections(velx, vely, velz, vehicle):
     VeMethods.UAV().send_NED_velocity(velx, vely, velz, vehicle)
+    
