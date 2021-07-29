@@ -6,8 +6,8 @@ Created on Jul 8, 2021
 class node():# class node
     def __init__(self,x,y):
         
-        self.colonne = x
-        self.abscice = y # elle va s'incrementer sur l'axe x (les case des colonnes )
+        self.colonne = x # height
+        self.abscice = y #width
         self.long = None
         self.lat = None
         self.OBSTACLE = 0
@@ -19,7 +19,8 @@ class node():# class node
         self.indice = -1
         self.cros = False
         self.TAG = None
-        
+        self.full = 0
+        self.hCost = 0
         self.G = 0
         self.F = 0
         self.H = 0

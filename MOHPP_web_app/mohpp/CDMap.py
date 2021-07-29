@@ -35,6 +35,6 @@ def get_Vel_Cost(nodes, srcObs, Start, Goal, alpha, Velocity, d_, seq = 0, block
     assigns the final travel time cost to each node based on its scaled velocity 
     '''
     print '--> CDMap...'
-    CDmap = FastMarching.fmm(Goal, Start, nodes, d_, cross = True, seq =seq, block = block)
+    CDmap = FastMarching.heuristicFMM(Goal, Start, nodes, d_, cross = True, seq =0, block = block)
     
     return CDmap.nodesList
