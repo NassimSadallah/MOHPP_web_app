@@ -558,6 +558,13 @@ class heuristicFMM(object):
         print time.time() - initime, 'seconds'    
         return self.nodesList                
 
+'''
+3 dimension version
+'''
+class fmm3D(object):
+    
+    def __init__(self, start_points =[]):
+        self.start_points = start_points
     
 
 
