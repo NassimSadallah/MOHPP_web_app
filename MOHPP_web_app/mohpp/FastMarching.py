@@ -14,7 +14,7 @@ class fmm(object):
     Fast Marching method with (8 and/or 16 neighbors )
     '''
     
-    def __init__(self, start_points = [], goal = None, nodesList = [], d_ = [], cross = False, heuristicActivate = False, seq = 0, block = 0):
+    def __init__(self, start_points=[], goal=None, nodesList=[], d_ =[], cross=False, heuristicAct=False, seq = 0, block = 0):
         
         self.d_ = d_
         self.narrowBand = []
@@ -25,7 +25,7 @@ class fmm(object):
         self.goal = goal
         self.nodesList = nodesList
         self.cross = cross
-        self.heuristicActivate = heuristicActivate
+        self.heuristicActivate = heuristicAct
         self.block = block
         if self.cross:
             self.neighborsList = [-1 for _ in range(8)]

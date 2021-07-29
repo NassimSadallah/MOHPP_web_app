@@ -77,8 +77,6 @@ def wavePlot(r, r2,nodes):
     
     plt.contourf(x, y, zVelocity ,200)                             
     plt.colorbar() 
-
-    
     plt.imshow(zVelocity, cmap='Greys',  interpolation='nearest')
     plt.show()    
 
@@ -86,8 +84,7 @@ def isEmptyList(l):
     
     for i in l:
         if i !=[]:
-            return False
-    #default True    
+            return False    
     return True
 
 def locateBestIdx(l):

@@ -13,7 +13,7 @@ tabGrid, GridMap = [],[]
 '''
 Read a binary map with static obstacles
 The image should be at the same package as the current script
-r, r2 are respectively width and the height of the matrix
+r, r2 are, respectively, width and the height of the matrix
 '''
 
 def readMap(r, r2,binaryMap):

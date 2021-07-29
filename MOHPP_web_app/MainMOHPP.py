@@ -2,7 +2,7 @@
 Main python script : First the binary map is extracted to a grid, 
 second, the velocity and the travel time cost are assigned with the Fast Marching (in this version only 8 neighbors are considered)
 Third, the gradient descent is used to compute the optimal path
-Finally, we instantiate a vehicule (either within the SITL or on a real drone and command it
+Finally, we instantiate a vehicle (either within the SITL or on a real drone and command it
  
 Created on Jul 12, 2021
 
