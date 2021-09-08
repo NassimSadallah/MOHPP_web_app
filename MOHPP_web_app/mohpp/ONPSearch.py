@@ -36,12 +36,12 @@ def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
             if is_detected:
                 
                 if crossObsPath:
-                    replannedPath, length = AStar(current, goal, extendedObs)
+                    replannedPath, length = AStar(current, goal, extendedObs, nodes)
                 
                 else:
                     continue
         else:
-            replannedPath, length = AStar(current, goal, extendedObs)
+            replannedPath, length = AStar(current, goal, extendedObs, nodes,  mode = 1)
             if length ==0 and not brake:
                 extendedObs = []
     return replannedPath[-1]
