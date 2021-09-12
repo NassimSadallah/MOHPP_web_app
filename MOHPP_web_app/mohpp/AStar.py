@@ -14,6 +14,7 @@ class Astar(object):
 
 
     def __init__(self, start, goal, extendedObs, nodes, mode = None ):
+ 
         '''
         Constructor
         '''
