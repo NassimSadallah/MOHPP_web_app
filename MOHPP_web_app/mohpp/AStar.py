@@ -11,9 +11,7 @@ from MAP import GridMap
 from mohpp.utilities import indexToCoordinates
 
 class Astar(object):
-    '''
-    classdocs
-    '''
+
 
     def __init__(self, start, goal, extendedObs, nodes, mode = None ):
         '''
