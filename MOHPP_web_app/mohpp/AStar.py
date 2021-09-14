@@ -99,7 +99,7 @@ def  computePath(self):
         self.closed.append(self.current)
         
         if self.mode==1:
-            intersect = IndetectionArea(5, self.current)
+            intersect = IndetectionArea(4, self.current)
         
         else:
             intersect = checkLineIntersection(self.current, self.goal, self.extendedObs)
