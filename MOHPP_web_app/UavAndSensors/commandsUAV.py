@@ -11,7 +11,7 @@ from UavAndSensors import VehiclesMethods as VeMethods
 
 def getReadyUAV(connection, baud_rate):
 
-    vehicle = VeMethods.UAV().connect_to_vehicle('127.0.0.1:14550', baud_rate=921600)
+    vehicle = VeMethods.UAV().connect_to_vehicle(connection, baud_rate=baud_rate)
     VeMethods.UAV().init_vehicle(vehicle)
     print '          <<  Ready to arm !  >> '
     return vehicle 

@@ -42,6 +42,7 @@ class UAV:
         while not vehicle.armed:
             print('Waiting for arming...')
             time.sleep(1.5)
+        
         '''
         takeoff to the altitude h
         '''

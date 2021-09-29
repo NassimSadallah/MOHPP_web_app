@@ -11,13 +11,15 @@ Created on Jul 12, 2021
 
 '''
 from mohpp import MAP, CDMap, utilities, OFPSearch
-from UavAndSensors import commandsUAV, VehiclesMethods as VeMeth
+from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import wavePlot
+from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
 
 
-
+sitl_connect ='127.0.0.1:14550'
+real_connect ='/dev/ttyAMA0' 
 width, height = 200, 150
 d_ = [width, width*height]
 start_coordinates, goal_coordinates = [151,57],[20,50]
@@ -36,14 +38,16 @@ goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
 
 #computes the velocity and the travel time at each node of the map
 CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_, seq=1,block=block)
-wavePlot(d_[0], d_[1]/d_[0], CDM)
+#wavePlot(d_[0], d_[1]/d_[0], CDM)
 globalPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
 
 '''
-connection to vehicle and controlling 
+connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('/dev/ttyAMA0', baud=921600) 
 '''
 
-UAV = VeMeth.UAV().connect_to_vehicle('127.0.0.1:14550', 921600)
+
+UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
+extendedObs, is_detected, brake = Sensors().sensArea()
 default_alt = VeMeth.UAV().takeoff(5.0, UAV)
 
 nextStep = globalPath[0]
