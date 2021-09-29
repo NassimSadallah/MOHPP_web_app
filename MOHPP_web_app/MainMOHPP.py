@@ -62,3 +62,8 @@ while nodeIdx !=goal_index:
     print n, e, d, nodeVel
     time.sleep(utilities.sqrt_dist(n, e, d))
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+
+
+
+
+
