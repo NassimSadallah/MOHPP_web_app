@@ -7,6 +7,7 @@ import RPi.GPIO as GPIO
 import time
 from threading import Thread
 from multiprocessing import Process
+from math import floor
 
 
 GPIO.setmode(GPIO.BCM)
@@ -34,28 +35,28 @@ class Sensors(object):
         sensors with pin configuration, we define the trig, echo pins 
         and ID for the embedded sensors (8 ultrasonic hc-rs04)  
         '''
-        self.sensor1 = {'ID': 'sensor1', 'TRIG': 27, 'ECHO': 12}
+        self.sensor1 = {'ID': 's1', 'TRIG': 27, 'ECHO': 12, 'VALUE': -1.0}
         self.sensors.append(self.sensor1) # add to the list
         
-        self.sensor2 = {'ID': 'sensor2', 'TRIG': 22, 'ECHO': 16}
+        self.sensor2 = {'ID': 's2', 'TRIG': 22, 'ECHO': 16, 'VALUE': -1.0}
         self.sensors.append(self.sensor2) # add to the list
         
-        self.sensor3 = {'ID': 'sensor3', 'TRIG': 10, 'ECHO': 20}
+        self.sensor3 = {'ID': 's3', 'TRIG': 10, 'ECHO': 20, 'VALUE': -1.0}
         self.sensors.append(self.sensor3) # add to the list
         
-        self.sensor4 = {'ID': 'sensor4', 'TRIG': 9, 'ECHO': 21}
+        self.sensor4 = {'ID': 's4', 'TRIG': 9, 'ECHO': 21, 'VALUE': -1.0}
         self.sensors.append(self.sensor4) # add to the list
         
-        self.sensor5 = {'ID': 'sensor5', 'TRIG': 2, 'ECHO': 24}
+        self.sensor5 = {'ID': 's5', 'TRIG': 2, 'ECHO': 24, 'VALUE': -1.0}
         self.sensors.append(self.sensor5) # add to the list
         
-        self.sensor6 = {'ID': 'sensor6', 'TRIG': 3, 'ECHO': 25}
+        self.sensor6 = {'ID': 's6', 'TRIG': 3, 'ECHO': 25, 'VALUE': -1.0}
         self.sensors.append(self.sensor6) # add to the list
         
-        self.sensor7 = {'ID': 'sensor7', 'TRIG': 4, 'ECHO': 8}
+        self.sensor7 = {'ID': 's7', 'TRIG': 4, 'ECHO': 8, 'VALUE': -1.0}
         self.sensors.append(self.sensor7) # add to the list
         
-        self.sensor8 = {'ID': 'sensor8', 'TRIG': 17, 'ECHO': 7}
+        self.sensor8 = {'ID': 's8', 'TRIG': 17, 'ECHO': 7, 'VALUE': -1.0}
         self.sensors.append(self.sensor8) # add to the list
         
 
@@ -64,10 +65,11 @@ class Sensors(object):
 
 
     def sensArea(self):
-    
+               
         for sensor in self.sensors:
             distanceRound = 0
             i = 5
+        
             print "Measurement started for " + sensor['ID'] + ", Ctrl+z to cancle the measurement";
                 
             while i>0:
@@ -92,14 +94,17 @@ class Sensors(object):
                 distance = pulse_duration * MEASURE_REFERENCE;
                 distanceRound += round(distance, 2);
                 i-=1
-            distanceRound = distanceRound/5.0    
+                
+            distanceRound = distanceRound/5.0  
+            sensor['VALUE'] = int(floor(distanceRound))  
+            
             if(distanceRound < MAX_DISTANCE_THRESHOLD):
-                print "Distance of sensor "+ sensor['ID'] + " : ", distanceRound, "cm";
+                print "Distance of sensor "+ sensor['ID'] + " : ", sensor['VALUE'], "cm";
                     
             else:
-                print "Out of range "+ sensor['ID'] + " : ", distanceRound, "cm";
+                print "Out of range "+ sensor['ID'] + " : ", sensor['VALUE'], "cm";
         
-        return 0,0,0
+        return self.sensors
     
     
     def initSensors(self):

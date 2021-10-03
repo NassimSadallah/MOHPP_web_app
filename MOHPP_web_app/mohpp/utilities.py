@@ -7,6 +7,7 @@ from math import floor, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
+from UavAndSensors.Sensors import Sensors
 
 
 UNDETECTED_OBSTACLE =-1 
@@ -98,3 +99,154 @@ def locateBestIdx(l):
             ids = co
     #return the popped best element in the hosting list
     return heappop(l[ids])
+
+def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
+    
+    isDetected, brake = False, False
+    
+    sensArea = Sensors()
+    sensors = sensArea.sensArea()
+    
+    for s in sensors:#8 sensors embedded static oriented to the map
+        
+        if s['ID']=='s1':#the north of the map
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx - d_[0]*s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+        
+        elif s['ID']=='s2':#north east
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx - d_[0]*s['VALUE'] + 1))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+        
+        elif s['ID']=='s3': #east
+
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx + s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+            
+        elif s['ID']=='s4': #south east
+
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx + d_[0]*s['VALUE']+s['VALUE']+s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+        
+        elif s['ID']=='s5':#south
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx + d_[0]*s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+        
+        elif s['ID']=='s6':#south west
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx + d_[0]*s['VALUE'] - s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+        
+        elif s['ID']=='s7':#west
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx - s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+            
+        elif s['ID']=='s8':#north west
+            
+            if s['VALUE'] <= sensRange:
+                obs = int(floor(curIdx - d_[0]*s['VALUE']- s['VALUE']))
+    
+                if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
+                    isDetected = True
+                    
+                    if s['VALUE'] <=safety_margin:
+                        brake = True 
+                        
+                    curobs = nodes[obs]
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)            
+            
+    return extendedObs, isDetected, brake 
+    
+
+
+

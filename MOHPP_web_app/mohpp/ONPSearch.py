@@ -4,7 +4,7 @@ Created on Jul 8, 2021
 @author: nassim
 '''
 from UavAndSensors.Sensors import Sensors
-from utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN
+from utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs
 from MainMOHPP import  d_
 import AStar
 
@@ -18,7 +18,6 @@ def ObsInPath(l, nodes):
         
     
 def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
-    sensArea = Sensors()
     
     current = start
     replannedPath = []
@@ -31,7 +30,7 @@ def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
             curIdx = coordinatesToIndex(coords, d_)
             replannedPath.remove(coords)
             
-            extendedObs, is_detected, brake = sensArea.sensArea()
+            extendedObs, is_detected, brake = DetectUnexpectedObs(curIdx, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes)
             
             if is_detected:

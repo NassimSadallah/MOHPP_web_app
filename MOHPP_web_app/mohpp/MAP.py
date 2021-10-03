@@ -8,7 +8,7 @@ from PIL import Image
 from Node import node
 from utilities import FORBIDDEN, NO_OBSTACLE, KNOWN_OBSTACLE, UNDETECTED_OBSTACLE
 
-tabGrid, GridMap = [],[]
+tabGrid, GridMap, nodeList = [],[],[]
 
 '''
 Read a binary map with static obstacles
@@ -87,7 +87,7 @@ def blockSegmentation(r, r2, nbrBlock):
                                                                 
 '''
 def processMap( r, r2, binaryMap, seq = 0, nbr_blocks=0):
-    global tabGrid, GridMap
+    global tabGrid, GridMap, nodeList
     tabGrid = [[0 for i in range(r)] for j in range(r2)]
     GridMap = [[0 for i in range(r)] for j in range(r2)]
     num, nodeList, srcObstacles = 0, [], []
