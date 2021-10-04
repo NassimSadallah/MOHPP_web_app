@@ -10,12 +10,13 @@ Created on Jul 12, 2021
 @author: nassim
 
 '''
-from mohpp import MAP, CDMap, utilities, OFPSearch
+from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import wavePlot
+from mohpp.utilities import wavePlot, DetectUnexpectedObs
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
+
 
 
 sitl_connect ='127.0.0.1:14550'
@@ -24,6 +25,8 @@ width, height = 200, 150
 d_ = [width, width*height]
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
+extendedObs = []
+
 
 #reads the binary map from the binarymaps package
 binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
@@ -35,39 +38,59 @@ Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=
 start_index = utilities.coordinatesToIndex(start_coordinates, d_)
 goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
 
-
+globalPath = []
 #computes the velocity and the travel time at each node of the map
 CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_, seq=1,block=block)
 #wavePlot(d_[0], d_[1]/d_[0], CDM)
-globalPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
+plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
 
 '''
 connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('/dev/ttyAMA0', baud=921600) 
 '''
 
-
 UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
-extendedObs, is_detected, brake = Sensors().sensArea()
+
+#sense the area for potential unknown threats
+extendedObs, isDetected, brake = DetectUnexpectedObs(start_index, Nodes, extendedObs, 2, 4, d_)
+
 default_alt = VeMeth.UAV().takeoff(5.0, UAV)
 
-nextStep = globalPath[0]
-globalPath.remove(globalPath[0])
+nextStep = plannedPath.pop([0])
+#plannedPath.remove(plannedPath[0])
 nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+
+#boolean to detect either the UAV is in Online mode or Offline
+isReplanning = False
 
 while nodeIdx !=goal_index:
     
-    current = nextStep
-    nextStep = globalPath[0]
-    nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
-    globalPath.remove(globalPath[0])
-    n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
-    UAV.airspeed = nodeVel
-    VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
-    print n, e, d, nodeVel
-    time.sleep(utilities.sqrt_dist(n, e, d))
+    if not isReplanning:
+        
+        current = nextStep
+        nextStep = plannedPath.pop([0])
+        nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+        nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
+        #plannedPath.remove(plannedPath[0])
+        n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
+        print n, e, d, nodeVel
+        #set the appropriate speed at which the UAV should travel through the point
+        UAV.airspeed = nodeVel
+        #send command with the north, east, down( -z) distance to move on 
+        VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
+        #pause the script for the corresponding travel time
+        time.sleep(utilities.sqrt_dist(n, e, d))
+        
+    else:
+        #we recompute the global path once we bypassed the dynamic threats
+        current = nextStep
+        plannedPath = OFPSearch.Gradient(nodeIdx, goal_index, CDM, d_)
+        
+    globalPath.append(nextStep)
+    #sensing the surrounding area with the embedded sensors
+    extendedObs, isDetected, brake = DetectUnexpectedObs(nodeIdx, Nodes, extendedObs, 2, 4, d_)
+    
+    if brake:#if brake is triggered, we must switch to online process
+        nextStep = ONPSearch.processONPS(nodeIdx, goal_index, extendedObs, isDetected, Nodes, d_)
+        isReplanning = True
+
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
-
-
-
-
-
