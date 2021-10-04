@@ -3,6 +3,7 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
+
 import RPi.GPIO as GPIO
 import time
 from threading import Thread
@@ -97,12 +98,6 @@ class Sensors(object):
                 
             distanceRound = distanceRound/5.0  
             sensor['VALUE'] = int(floor(distanceRound))  
-            
-            if(distanceRound < MAX_DISTANCE_THRESHOLD):
-                print "Distance of sensor "+ sensor['ID'] + " : ", sensor['VALUE'], "cm";
-                    
-            else:
-                print "Out of range "+ sensor['ID'] + " : ", sensor['VALUE'], "cm";
         
         return self.sensors
     
@@ -117,12 +112,3 @@ class Sensors(object):
                 GPIO.setup( sensor['TRIG'], GPIO.OUT )#Sensor's trig pins should be out
         
         return True
-        
-    
-    
-    
-    
-    
-    
-    
-    

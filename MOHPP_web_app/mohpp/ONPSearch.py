@@ -5,10 +5,9 @@ Created on Jul 8, 2021
 '''
 from UavAndSensors.Sensors import Sensors
 from utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs
-from MainMOHPP import  d_
 import AStar
 
-def ObsInPath(l, nodes):
+def ObsInPath(l, nodes, d_):
 
     for i in l:
         n = indexToCoordinates(i,d_)
@@ -31,7 +30,7 @@ def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
             replannedPath.remove(coords)
             
             extendedObs, is_detected, brake = DetectUnexpectedObs(curIdx, nodes, extendedObs, 2, 4, d_)
-            crossObsPath = ObsInPath(replannedPath, nodes)
+            crossObsPath = ObsInPath(replannedPath, nodes, d_)
             
             if is_detected:
                 

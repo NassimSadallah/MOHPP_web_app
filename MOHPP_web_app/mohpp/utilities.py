@@ -7,8 +7,6 @@ from math import floor, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
-from UavAndSensors.Sensors import Sensors
-
 
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -16,6 +14,8 @@ KNOWN_OBSTACLE = 1
 FORBIDDEN = 9999999999.0 
 NEW_FORBIDDEN = 9999999999.0 
 INFINI=99999999999.0
+width, height = 200, 150
+d_ = [width, width*height]
 
 def coordinatesToIndex(current_coordinates=[-1, -1], d_ = [-1, -1]):
     
@@ -100,11 +100,10 @@ def locateBestIdx(l):
     #return the popped best element in the hosting list
     return heappop(l[ids])
 
-def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
+def DetectUnexpectedObs(sensArea, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
     
     isDetected, brake = False, False
     
-    sensArea = Sensors()
     sensors = sensArea.sensArea()
     
     for s in sensors:#8 sensors embedded static oriented to the map
@@ -132,16 +131,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx - d_[0]*s['VALUE'] + 1))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        isDetected = True
+                        
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
         
         elif s['ID']=='s3': #east
 
@@ -149,16 +150,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx + s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        isDetected = True
+                        
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
             
         elif s['ID']=='s4': #south east
 
@@ -166,16 +169,17 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx + d_[0]*s['VALUE']+s['VALUE']+s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
+                        isDetected = True
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
         
         elif s['ID']=='s5':#south
             
@@ -183,16 +187,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx + d_[0]*s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
+                        isDetected = True
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
+                   
         
         elif s['ID']=='s6':#south west
             
@@ -200,16 +206,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx + d_[0]*s['VALUE'] - s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
+                        isDetected = True
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
+                    
         
         elif s['ID']=='s7':#west
             
@@ -217,16 +225,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx - s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
+                        isDetected = True
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
+                   
             
         elif s['ID']=='s8':#north west
             
@@ -234,16 +244,18 @@ def DetectUnexpectedObs(curIdx, nodes, extendedObs, safety_margin, sensRange, d_
                 obs = int(floor(curIdx - d_[0]*s['VALUE']- s['VALUE']))
     
                 if ((obs>=0) and(int(floor(obs/d_[1]))==int(floor(curIdx/d_[1])))):
-                    isDetected = True
-                    
-                    if s['VALUE'] <=safety_margin:
-                        brake = True 
+                    if nodes[obs].OBSTACLE != KNOWN_OBSTACLE and nodes[obs].TAG != FORBIDDEN:
+                        isDetected = True
                         
-                    curobs = nodes[obs]
-                    curobs.OBSTACLE = KNOWN_OBSTACLE
-                    curobs.TAG = NEW_FORBIDDEN
-                    curobs.cost = INFINI
-                    extendedObs.append(curobs)            
+                        if s['VALUE'] <=safety_margin:
+                            brake = True 
+                            
+                        curobs = nodes[obs]
+                        curobs.OBSTACLE = KNOWN_OBSTACLE
+                        curobs.TAG = NEW_FORBIDDEN
+                        curobs.cost = INFINI
+                        extendedObs.append(curobs)            
+                 
             
     return extendedObs, isDetected, brake 
     

@@ -5,8 +5,7 @@ Created on Jul 8, 2021
 '''
 from heapq import heappush, heappop
 from math import floor
-from utilities import NEW_FORBIDDEN
-from MainMOHPP import width, height, d_
+from utilities import NEW_FORBIDDEN, width, height, d_
 from MAP import GridMap
 from mohpp.utilities import indexToCoordinates
 

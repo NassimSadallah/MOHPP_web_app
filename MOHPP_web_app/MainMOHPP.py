@@ -12,7 +12,7 @@ Created on Jul 12, 2021
 '''
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import wavePlot, DetectUnexpectedObs
+from mohpp.utilities import  DetectUnexpectedObs, height, width, d_
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
@@ -21,12 +21,11 @@ from math import floor
 
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
-width, height = 200, 150
-d_ = [width, width*height]
+
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 extendedObs = []
-
+sensArea = Sensors()
 
 #reads the binary map from the binarymaps package
 binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
@@ -51,14 +50,17 @@ connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('
 UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
 
 #sense the area for potential unknown threats
-extendedObs, isDetected, brake = DetectUnexpectedObs(start_index, Nodes, extendedObs, 2, 4, d_)
+extendedObs, isDetected, brake = DetectUnexpectedObs(sensArea, start_index, Nodes, extendedObs, 2, 4, d_)
 
-default_alt = VeMeth.UAV().takeoff(5.0, UAV)
+default_alt = UAV.location.local_frame.down#VeMeth.UAV().takeoff(5.0, UAV)
 
 nextStep = plannedPath.pop([0])
 #plannedPath.remove(plannedPath[0])
 nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
 
+if brake:#if brake is triggered, we must switch to online process
+    nextStep = ONPSearch.processONPS(nodeIdx, goal_index, extendedObs, isDetected, Nodes, d_)
+    isReplanning = True
 #boolean to detect either the UAV is in Online mode or Offline
 isReplanning = False
 
@@ -87,7 +89,7 @@ while nodeIdx !=goal_index:
         
     globalPath.append(nextStep)
     #sensing the surrounding area with the embedded sensors
-    extendedObs, isDetected, brake = DetectUnexpectedObs(nodeIdx, Nodes, extendedObs, 2, 4, d_)
+    extendedObs, isDetected, brake = DetectUnexpectedObs(sensArea, nodeIdx, Nodes, extendedObs, 2, 4, d_)
     
     if brake:#if brake is triggered, we must switch to online process
         nextStep = ONPSearch.processONPS(nodeIdx, goal_index, extendedObs, isDetected, Nodes, d_)
