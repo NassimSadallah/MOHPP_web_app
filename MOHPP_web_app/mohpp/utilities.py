@@ -105,9 +105,9 @@ def DetectUnexpectedObs(sensArea, curIdx, nodes, extendedObs, safety_margin, sen
     isDetected, brake = False, False
     
     sensors = sensArea.sensArea()
-    
+    values = []
     for s in sensors:#8 sensors embedded static oriented to the map
-        
+        values.append(s['VALUE'])
         if s['ID']=='s1':#the north of the map
             
             if s['VALUE'] <= sensRange:
@@ -256,7 +256,7 @@ def DetectUnexpectedObs(sensArea, curIdx, nodes, extendedObs, safety_margin, sen
                         curobs.cost = INFINI
                         extendedObs.append(curobs)            
                  
-            
+    print values        
     return extendedObs, isDetected, brake 
     
 
