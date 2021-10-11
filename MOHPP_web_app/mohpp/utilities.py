@@ -100,13 +100,16 @@ def locateBestIdx(l):
     #return the popped best element in the hosting list
     return heappop(l[ids])
 
-def DetectUnexpectedObs(sensorsValues, UavOrient = 0, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
+def DetectUnexpectedObs(sensors, UavOrient = 0, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
+    
     isDetected, brake = False, False
     sN, sE, sS, sW, sNE, sSE, sSW, sNW = [-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1]
+    sensorsValues=sensors.getSensorsValues() #call the method which read the sensors' values sent from the arduino nano
+    
     if sensorsValues !=[]: 
         
         if sensorsValues[0] >=1 and sensorsValues[0] < sensRange: 
-
+            #transforms the radian values to cartesian one
             sN= [int(round(int(sensorsValues[0])*cos(2*pi-UavOrient+pi/2),0)),-int(round(int(sensorsValues[0])*sin(2*pi-UavOrient+pi/2),0))]   
             
             curobs = nodes[coordinatesToIndex(sN, d_)]
@@ -236,23 +239,8 @@ def DetectUnexpectedObs(sensorsValues, UavOrient = 0, curIdx, nodes, extendedObs
                     brake = True
                     
         print  sensorsValues[4:8],  sNE, sSE, sSW, sNW       
-    
+        return extendedObs, isDetected, brake
         sensorsValues = []  
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def DetectUnexpectedObsold(sensArea, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
     

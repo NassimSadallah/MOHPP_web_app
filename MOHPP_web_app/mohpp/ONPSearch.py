@@ -16,7 +16,7 @@ def ObsInPath(l, nodes, d_):
     return False
         
     
-def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
+def processONPS(start, goal, extendedObs, is_detected, nodes, d_,sensors):
     
     current = start
     replannedPath = []
@@ -29,7 +29,7 @@ def processONPS(start, goal, extendedObs, is_detected, nodes, d_):
             curIdx = coordinatesToIndex(coords, d_)
             replannedPath.remove(coords)
             
-            extendedObs, is_detected, brake = DetectUnexpectedObs(curIdx, nodes, extendedObs, 2, 4, d_)
+            extendedObs, is_detected, brake = DetectUnexpectedObs(sensors,curIdx, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes, d_)
             
             if is_detected:

@@ -72,3 +72,8 @@ class UAV:
             0, 0)    # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
         
         vehicle.send_mavlink(msg)
+
+    def getYawValue(self, vehicle):
+        return vehicle.heading
+        
+        
