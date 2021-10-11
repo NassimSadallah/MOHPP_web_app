@@ -3,7 +3,7 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
-from UavAndSensors.Sensors import Sensors
+
 from utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs
 import AStar
 

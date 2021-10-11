@@ -4,67 +4,39 @@ Created on Jul 8, 2021
 @author: nassim
 '''
 
-import RPi.GPIO as GPIO
-import time
-from threading import Thread
-from multiprocessing import Process
-from math import floor
-
-
-GPIO.setmode(GPIO.BCM)
-
-GPIO.setwarnings(False) # for disable warnings in terminal
-
-# time for sensor to settle
-SENSOR_SETTLE_TIME = 0.00001
-
-MEASURE_INTERVAL_TIME = 0.1 # time delay to measure (min 15miliseconds)                 
-
-# max distance threshold for sensors to react (in cm)
-MAX_DISTANCE_THRESHOLD = 500.0
-
-# Speed of sound at sea level = 343 m/s or 34300 cm/s
-MEASURE_REFERENCE = 17150
+import time   
+import serial, serial.tools.list_ports
 
 
 class Sensors(object):
     
     def __init__(self):
         
-        self.sensors = []
-        '''
-        sensors with pin configuration, we define the trig, echo pins 
-        and ID for the embedded sensors (8 ultrasonic hc-rs04)  
-        '''
-        self.sensor1 = {'ID': 's1', 'TRIG': 27, 'ECHO': 12, 'VALUE': -1.0}
-        self.sensors.append(self.sensor1) # add to the list
+        self.ser = self.initSensors()
+        print('USB serial communication activated !')
+    
+    def initSensors(self):
         
-        self.sensor2 = {'ID': 's2', 'TRIG': 22, 'ECHO': 16, 'VALUE': -1.0}
-        self.sensors.append(self.sensor2) # add to the list
-        
-        self.sensor3 = {'ID': 's3', 'TRIG': 10, 'ECHO': 20, 'VALUE': -1.0}
-        self.sensors.append(self.sensor3) # add to the list
-        
-        self.sensor4 = {'ID': 's4', 'TRIG': 9, 'ECHO': 21, 'VALUE': -1.0}
-        self.sensors.append(self.sensor4) # add to the list
-        
-        self.sensor5 = {'ID': 's5', 'TRIG': 2, 'ECHO': 24, 'VALUE': -1.0}
-        self.sensors.append(self.sensor5) # add to the list
-        
-        self.sensor6 = {'ID': 's6', 'TRIG': 3, 'ECHO': 25, 'VALUE': -1.0}
-        self.sensors.append(self.sensor6) # add to the list
-        
-        self.sensor7 = {'ID': 's7', 'TRIG': 4, 'ECHO': 8, 'VALUE': -1.0}
-        self.sensors.append(self.sensor7) # add to the list
-        
-        self.sensor8 = {'ID': 's8', 'TRIG': 17, 'ECHO': 7, 'VALUE': -1.0}
-        self.sensors.append(self.sensor8) # add to the list
-        
+        myports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
+        port = myports[0]
+        print port[0]
+        ser = serial.Serial(port[0], 9600, timeout=1)
+        ser.flush()
+        return ser
 
-        self.initSensors()
-        print('initialization of pins done !')
-
-
+    def getSensorsValues(self):
+        sensorsValues = []
+        
+        while True:
+            if self.ser.in_waiting >6:
+                line = self.ser.readline().decode('utf-8').rstrip()
+                splitline = line.split(',')
+        
+                for l in splitline:
+                    sensorsValues.append(round(int(l)*0.01,2))  
+            
+                return sensorsValues                
+"""      
     def sensArea(self):
                
         for sensor in self.sensors:
@@ -101,14 +73,41 @@ class Sensors(object):
         
         return self.sensors
     
+
+
+
+
+UavOrient = 0#degToRad(0)
     
-    def initSensors(self):
+while True:
+    if ser.in_waiting >6:
+        line = ser.readline().decode('utf-8').rstrip()
+        splitline = line.split(',')
+
+        for l in splitline:
+            sensorsValues.append(round(int(l)*0.01,2))  
+
+ 
+        sN= [int(round(int(sensorsValues[0])*cos(2*pi-UavOrient+pi/2),0)),-int(round(int(sensorsValues[0])*sin(2*pi-UavOrient+pi/2),0))]
         
-        if len(self.sensors) > 0:
-            for sensor in self.sensors:
+        sE= [int(round(int(sensorsValues[1])*cos(2*pi-UavOrient),0)),int(round(int(sensorsValues[1])*sin(2*pi-UavOrient),0))]
         
-                GPIO.setup( sensor['ECHO'], GPIO.IN )#Sensor's echo pins shoud be in
-                
-                GPIO.setup( sensor['TRIG'], GPIO.OUT )#Sensor's trig pins should be out
+        sS= [int(round(int(sensorsValues[2])*cos(2*pi-UavOrient+pi*3/2),0)),-int(round(int(sensorsValues[2])*sin(2*pi-UavOrient+pi*3/2),0))]
         
-        return True
+        sW= [int(round(int(sensorsValues[3])*cos(2*pi-UavOrient+pi),0)),int(round(int(sensorsValues[3])*sin(2*pi-UavOrient+pi),0))]
+        
+        sNE=[int(round(int(sensorsValues[4])*cos(2*pi-UavOrient+pi/4),0)),-int(round(int(sensorsValues[4])*sin(2*pi-UavOrient+pi/4),0))] 
+        sSE=[int(round(int(sensorsValues[5])*cos(2*pi-UavOrient+7*pi/4),0)),-int(round(int(sensorsValues[5])*sin(2*pi-UavOrient+7*pi/4),0))] 
+        sSW=[int(round(int(sensorsValues[6])*cos(2*pi-UavOrient+5*pi/4),0)),-int(round(int(sensorsValues[6])*sin(2*pi-UavOrient+5*pi/4),0))] 
+        sNW=[int(round(int(sensorsValues[7])*cos(2*pi-UavOrient+3*pi/4),0)),-int(round(int(sensorsValues[7])*sin(2*pi-UavOrient+3*pi/4),0))]  
+
+        print  sensorsValues[4:8],  sNE, sSE, sSW, sNW       
+    
+        sensorsValues = []    
+    
+    time.sleep(1)
+        
+        
+"""        
+        
+
