@@ -73,7 +73,5 @@ class UAV:
         
         vehicle.send_mavlink(msg)
 
-    def getYawValue(self, vehicle):
-        return vehicle.heading
         
         
