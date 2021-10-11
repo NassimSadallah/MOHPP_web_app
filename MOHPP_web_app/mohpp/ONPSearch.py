@@ -35,7 +35,7 @@ def processONPS(start, goal, extendedObs, is_detected, nodes, d_,sensors):
             if is_detected:
                 
                 if crossObsPath:
-                    replannedPath, length = AStar(current, goal, extendedObs, nodes)
+                    replannedPath, length = AStar.Astar(current, goal, extendedObs, nodes)
                 
                 else:
                     continue

@@ -26,15 +26,45 @@ class Astar(object):
         
         self.computePath()
         
-def came_from(self):
+    def came_from(self):
+    
+        n = self.closed[-1]
+        while n.parent != n:
+    
+            self.Path.append(n)
+            n = n.parent
+        return self.Path
 
-    n = self.closed[-1]
-    while n.parent != n:
-
-        self.Path.append(n)
-        n = n.parent
-    return self.Path
-     
+    def  computePath(self):
+        
+        g = self.nodes[self.current].G = 0
+        h = self.nodes[self.current].H = 0
+        self.nodes[self.current].F = g + h 
+        self.nodes[self.current].parent = self.start
+        heappush(self.opened, (self.nodes[self.current].F, self.nodes[self.current]))
+        
+        while self.opened !=[]:
+            
+            self.current = heappop(self.opened)[1]
+            self.closed.append(self.current)
+            
+            if self.mode==1:
+                intersect = IndetectionArea(4, self.current)
+            
+            else:
+                intersect = checkLineIntersection(self.current, self.goal, self.extendedObs)
+        
+            if self.current==self.nodes[self.goal] or not intersect:#.abscice \and self.current.colonne==self.nodes[self.goal].colonne
+                self.came_from()
+                coords = [-1,-1]
+                i = len(self.Path)
+                Paths = []
+                while i>0:
+                    coords = indexToCoordinates(self.Path[i-1].indice,d_)
+                    Paths.append([coords[0],coords[1]])
+                    i-=1
+        
+                return Paths,len(Paths)                
 def checkLineIntersection(co, goa, zo):       
        
         result = False
@@ -82,36 +112,4 @@ def IndetectionArea(Rang,curElem):
                         if (((((curElem.colonne+i) -curElem.colonne)**2)+(((curElem.abscice+j) - curElem.abscice)**2))<=Rang**2):
                                 if GridMap[curElem.colonne+i][curElem.abscice+j].TAG == NEW_FORBIDDEN:
                                     return True
-    return False
-
-def  computePath(self):
-    
-    g = self.nodes[self.current].G = 0
-    h = self.nodes[self.current].H = 0
-    self.nodes[self.current].F = g + h 
-    self.nodes[self.current].parent = self.start
-    heappush(self.opened, (self.nodes[self.current].F, self.nodes[self.current]))
-    
-    while self.opened !=[]:
-        
-        self.current = heappop(self.opened)[1]
-        self.closed.append(self.current)
-        
-        if self.mode==1:
-            intersect = IndetectionArea(4, self.current)
-        
-        else:
-            intersect = checkLineIntersection(self.current, self.goal, self.extendedObs)
-    
-        if self.current==self.nodes[self.goal] or not intersect:#.abscice \and self.current.colonne==self.nodes[self.goal].colonne
-            came_from()
-            coords = [-1,-1]
-            i = len(self.Path)
-            Paths = []
-            while i>0:
-                coords = indexToCoordinates(self.Path[i-1].indice,d_)
-                Paths.append([coords[0],coords[1]])
-                i-=1
-    
-            return Paths,len(Paths)                
-                
+    return False             
