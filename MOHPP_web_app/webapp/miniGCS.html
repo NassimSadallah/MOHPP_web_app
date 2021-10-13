@@ -1,0 +1,15 @@
+<html>
+    <head>
+        <title>MOHPP</title>
+        <script type="text/javascript" src="/eel.js"></script>
+        <script>
+            async function getTime() {
+                let value = await eel.getTimess()();
+                alert(value);
+            }
+        </script>
+    </head>
+    <body>
+        <button onclick="getTime()">Click</button>
+    </body>
+<html>

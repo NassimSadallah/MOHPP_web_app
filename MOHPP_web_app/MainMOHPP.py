@@ -10,13 +10,13 @@ Created on Jul 12, 2021
 @author: nassim
 
 '''
+
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
-
 
 
 sitl_connect ='127.0.0.1:14550'
@@ -50,24 +50,13 @@ connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('
 
 UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
 
-#sense the area for potential unknown threats
-#extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea, UAV.heading, start_index, Nodes, extendedObs, 2, 4, d_)
-
-
 VeMeth.UAV().takeoff(5.0, UAV)
 heading = UavHeading(UAV.heading)
 default_alt = UAV.location.local_frame.down
 nextStep = plannedPath[0]
 plannedPath.remove(plannedPath[0])
 nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
-#utilities.wavePlot(width, height, Nodes)
-"""
-if brake:#if brake is triggered, we must switch to online process
-    nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading, extendedObs, isDetected, Nodes, d_,sensedArea)
-    print 'main replanned'
-    isReplanning = True
-#boolean to detect either the UAV is in Online mode or Offline
-"""
+
 isReplanning = False
 
 while nodeIdx !=goal_index:
