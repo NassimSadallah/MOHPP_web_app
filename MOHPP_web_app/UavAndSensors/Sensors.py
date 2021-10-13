@@ -18,7 +18,12 @@ class Sensors(object):
     def initSensors(self):
         
         myports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
-        port = myports[0]
+
+        for p in myports:
+            if 'ttyUSB' in p[0]:
+                 
+                port = p
+                
         print port[0]
         ser = serial.Serial(port[0], 9600, timeout=1)
         ser.flush()
@@ -29,7 +34,7 @@ class Sensors(object):
         
         while True:
             if self.ser.in_waiting >6:
-                line = self.ser.readline().decode('utf-8').rstrip()
+                line = self.ser.readline().decode('ISO-8859-1').rstrip()
                 splitline = line.split(',')
         
                 for l in splitline:

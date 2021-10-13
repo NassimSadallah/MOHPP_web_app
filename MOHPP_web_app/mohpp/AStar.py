@@ -5,9 +5,9 @@ Created on Jul 8, 2021
 '''
 from heapq import heappush, heappop
 from math import floor
-from utilities import NEW_FORBIDDEN, width, height, d_
-from MAP import GridMap
-from mohpp.utilities import indexToCoordinates
+from utilities import NEW_FORBIDDEN, FORBIDDEN, INFINI, width, height, d_
+
+from mohpp.utilities import indexToCoordinates, coordinatesToIndex, sqrt_dist
 
 class Astar(object):
 
@@ -22,9 +22,9 @@ class Astar(object):
         self.extendedObs = extendedObs
         self.mode = mode
         self.nodes = nodes
-        self.opened, self.closed, self.neighbors, self.path = [],[],[],[]
+        self.opened, self.closed, self.neighbors, self.Path = [],[],[],[]
         
-        self.computePath()
+        
         
     def came_from(self):
     
@@ -37,22 +37,23 @@ class Astar(object):
 
     def  computePath(self):
         
-        g = self.nodes[self.current].G = 0
-        h = self.nodes[self.current].H = 0
-        self.nodes[self.current].F = g + h 
-        self.nodes[self.current].parent = self.start
-        heappush(self.opened, (self.nodes[self.current].F, self.nodes[self.current]))
+        g =self.current.G = 0
+        h = self.current.H = 0
+        self.current.F = g + h 
+        self.current.parent = self.current
+        heappush(self.opened, (self.current.F, self.current))
         
         while self.opened !=[]:
             
             self.current = heappop(self.opened)[1]
             self.closed.append(self.current)
-            
+           
             if self.mode==1:
-                intersect = IndetectionArea(4, self.current)
+                intersect = IndetectionArea(4, self.current, self.nodes)
             
             else:
-                intersect = checkLineIntersection(self.current, self.goal, self.extendedObs)
+                
+                intersect = checkLineIntersection(self.current, self.nodes[self.goal], self.extendedObs)
         
             if self.current==self.nodes[self.goal] or not intersect:#.abscice \and self.current.colonne==self.nodes[self.goal].colonne
                 self.came_from()
@@ -61,14 +62,74 @@ class Astar(object):
                 Paths = []
                 while i>0:
                     coords = indexToCoordinates(self.Path[i-1].indice,d_)
-                    Paths.append([coords[0],coords[1]])
+                    Paths.append(coords)
                     i-=1
         
-                return Paths,len(Paths)                
+                return Paths 
+            
+            else:
+                
+                neighborList = Neighbours_of(self.current, self.nodes)
+                
+                if neighborList==[]:
+                    return BaseException
+                
+                for n in neighborList:
+                            
+                    n.G = n.parent.G + sqrt_dist((n.parent.colonne-n.colonne),(n.parent.abscice-n.abscice))
+
+                    n.H =(n.cost)*199.5#+dist_between(n, goal)*99)#*0.3+(dist_between(n, goal)*0.7)
+                    n.F = n.G + n.H
+                    m =InTheList(n,self.closed,0)
+                    if m !=False :  
+                        if n.F < m.F :
+                            self.closed.remove(m)
+                    else:  
+            
+                        m = InTheList(n,self.opened,1) 
+                        if m !=False: 
+                            if n.F < m.F :
+    
+                                self.opened.remove(m)
+                        else:                           
+                                n.parent = self.current
+                                heappush(self.opened, (n.F,n))
+
+
+                                            
+def InTheList(c,cl,chif):
+        if chif==0:
+            for k in cl:
+                if c.colonne == k.colonne and c.abscice == k.abscice:
+                    return c
+        else : 
+            for k in cl:
+                if c.colonne == k[1].colonne and c.abscice == k[1].abscice:
+                    return c
+        return False 
+
+def Neighbours_of(c, nodes):
+    v = [(-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)]
+    nei =[]
+    for i in v:
+        coordSuivante = [c.abscice + i[0],c.colonne + i[1]]
+    
+        if coordSuivante[0]>=0 and coordSuivante[0]< height and\
+        coordSuivante[1]>=0 and coordSuivante[1]<width:           
+            
+            n = nodes[coordinatesToIndex(coordSuivante, d_)]        
+            
+            if n.TAG==FORBIDDEN or n.TAG==NEW_FORBIDDEN or n.cost==INFINI :#si le noeud n'est pas un mur
+
+                continue
+            else:    
+                nei.append(n)
+    return nei
+                               
 def checkLineIntersection(co, goa, zo):       
        
         result = False
-
+        
         if goa.abscice==co.abscice:
            
             for obstacle in zo:
@@ -100,7 +161,7 @@ def checkLineIntersection(co, goa, zo):
                         return True                        
         return False
 
-def IndetectionArea(Rang,curElem):
+def IndetectionArea(Rang,curElem, nodes):
         
     for i in range(-Rang,Rang): 
         if i+curElem.colonne >=0 and i+curElem.colonne<height : 
@@ -110,6 +171,6 @@ def IndetectionArea(Rang,curElem):
                         continue
                     else:
                         if (((((curElem.colonne+i) -curElem.colonne)**2)+(((curElem.abscice+j) - curElem.abscice)**2))<=Rang**2):
-                                if GridMap[curElem.colonne+i][curElem.abscice+j].TAG == NEW_FORBIDDEN:
+                                if nodes[coordinatesToIndex([curElem.abscice+j,curElem.colonne+i],d_)].TAG == NEW_FORBIDDEN:
                                     return True
     return False             

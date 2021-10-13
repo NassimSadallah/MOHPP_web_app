@@ -17,7 +17,7 @@ class UAV:
     def connect_to_vehicle(self,connection_string,baud_rate):
         print('connection to UAV on ', connection_string)
         vehicle = connect(connection_string,wait_ready=True, baud=baud_rate)
-        self.init_vehicle(vehicle)
+        #self.init_vehicle(vehicle)
             
         return vehicle
     

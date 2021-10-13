@@ -12,7 +12,7 @@ Created on Jul 12, 2021
 '''
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import  DetectUnexpectedObs, height, width, d_
+from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
@@ -43,6 +43,7 @@ CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_,
 #wavePlot(d_[0], d_[1]/d_[0], CDM)
 plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
 
+
 '''
 connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('/dev/ttyAMA0', baud=921600) 
 '''
@@ -50,18 +51,23 @@ connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('
 UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
 
 #sense the area for potential unknown threats
-extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea, UAV.heading, start_index, Nodes, extendedObs, 2, 4, d_)
+#extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea, UAV.heading, start_index, Nodes, extendedObs, 2, 4, d_)
 
-default_alt = UAV.location.local_frame.down#VeMeth.UAV().takeoff(5.0, UAV)
 
-nextStep = plannedPath.pop([0])
-#plannedPath.remove(plannedPath[0])
+VeMeth.UAV().takeoff(5.0, UAV)
+heading = UavHeading(UAV.heading)
+default_alt = UAV.location.local_frame.down
+nextStep = plannedPath[0]
+plannedPath.remove(plannedPath[0])
 nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
-
+#utilities.wavePlot(width, height, Nodes)
+"""
 if brake:#if brake is triggered, we must switch to online process
-    nextStep = ONPSearch.processONPS(nodeIdx, goal_index, extendedObs, isDetected, Nodes, d_)
+    nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading, extendedObs, isDetected, Nodes, d_,sensedArea)
+    print 'main replanned'
     isReplanning = True
 #boolean to detect either the UAV is in Online mode or Offline
+"""
 isReplanning = False
 
 while nodeIdx !=goal_index:
@@ -69,12 +75,12 @@ while nodeIdx !=goal_index:
     if not isReplanning:
         
         current = nextStep
-        nextStep = plannedPath.pop([0])
+        nextStep = plannedPath[0]
         nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
         nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
-        #plannedPath.remove(plannedPath[0])
+        plannedPath.remove(plannedPath[0])
         n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
-        print n, e, d, nodeVel
+        print n, e, d, nodeVel,utilities.sqrt_dist(n, e, d)
         #set the appropriate speed at which the UAV should travel through the point
         UAV.airspeed = nodeVel
         #send command with the north, east, down( -z) distance to move on 
@@ -89,10 +95,12 @@ while nodeIdx !=goal_index:
         
     globalPath.append(nextStep)
     #sensing the surrounding area with the embedded sensors
-    extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea,UAV.heading, nodeIdx, Nodes, extendedObs, 2, 4, d_)
-    
+    extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea,UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
+    print isDetected, brake, len(extendedObs)
+    #brake = False
     if brake:#if brake is triggered, we must switch to online process
-        nextStep = ONPSearch.processONPS(nodeIdx, goal_index, extendedObs, isDetected, Nodes, d_, sensedArea)
+        print 'replanning ...'
+        nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sensedArea)
         isReplanning = True
 
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice

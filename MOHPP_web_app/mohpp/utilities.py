@@ -17,7 +17,7 @@ INFINI=99999999999.0
 width, height = 200, 150
 d_ = [width, width*height]
 
-def coordinatesToIndex(current_coordinates=[-1, -1], d_ = [-1, -1]):
+def coordinatesToIndex(current_coordinates, d_ = [-1, -1]):
     
     idx = current_coordinates[0]
     idx += current_coordinates[1] * d_[0]
@@ -100,147 +100,192 @@ def locateBestIdx(l):
     #return the popped best element in the hosting list
     return heappop(l[ids])
 
-def DetectUnexpectedObs(sensors, UavOrient = 0, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
+def UavHeading(heading):
+    return heading*pi/180
+
+def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
     
     isDetected, brake = False, False
-    sN, sE, sS, sW, sNE, sSE, sSW, sNW = [-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1],[-1,-1]
+    sN, sE, sS, sW, sNE, sSE, sSW, sNW = [0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]
     sensorsValues=sensors.getSensorsValues() #call the method which read the sensors' values sent from the arduino nano
+    cur = [nodes[curIdx].abscice,nodes[curIdx].colonne] # save the x, y coordinates of the current position of the UAV
     
     if sensorsValues !=[]: 
         
-        if sensorsValues[0] >=1 and sensorsValues[0] < sensRange: 
+        if sensorsValues[0] >=.8 and sensorsValues[0] < sensRange:
+
             #transforms the radian values to cartesian one
             sN= [int(round(int(sensorsValues[0])*cos(2*pi-UavOrient+pi/2),0)),-int(round(int(sensorsValues[0])*sin(2*pi-UavOrient+pi/2),0))]   
-            
-            curobs = nodes[coordinatesToIndex(sN, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sN[0],cur[1]+sN[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[0]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):
+                  
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+            
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sN !=[0,0]:            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[0]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
         
-        if sensorsValues[1] >=1 and sensorsValues[1] < safety_margin:
+        if sensorsValues[1] >=.8 and sensorsValues[1] < safety_margin:
+            
             sE= [int(round(int(sensorsValues[1])*cos(2*pi-UavOrient),0)),int(round(int(sensorsValues[1])*sin(2*pi-UavOrient),0))]
             
-            curobs = nodes[coordinatesToIndex(sE, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sE[0],cur[1]+sE[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[1]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sE !=[0,0]:            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[1]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
         
-        if sensorsValues[2] >=1 and sensorsValues[2] < sensRange:
+        if sensorsValues[2] >=.8 and sensorsValues[2] < sensRange:
             
             sS= [int(round(int(sensorsValues[2])*cos(2*pi-UavOrient+pi*3/2),0)),-int(round(int(sensorsValues[2])*sin(2*pi-UavOrient+pi*3/2),0))]          
-            curobs = nodes[coordinatesToIndex(sS, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sS[0],cur[1]+sS[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[2]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):
+            
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sS !=[0,0]:            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[2]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
         
-        if sensorsValues[3] >=1 and sensorsValues[3] < sensRange:
+        if sensorsValues[3] >=.8 and sensorsValues[3] < sensRange:
             
             sW= [int(round(int(sensorsValues[3])*cos(2*pi-UavOrient+pi),0)),int(round(int(sensorsValues[3])*sin(2*pi-UavOrient+pi),0))]            
-            curobs = nodes[coordinatesToIndex(sW, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sW[0],cur[1]+sW[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[3]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):
+                
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sW !=[0,0]:            
                     
-        if sensorsValues[4] >=1 and sensorsValues[4] < sensRange:
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[3]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
+                        
+        if sensorsValues[4] >=.8 and sensorsValues[4] < sensRange:
             
             sNE=[int(round(int(sensorsValues[4])*cos(2*pi-UavOrient+pi/4),0)),-int(round(int(sensorsValues[4])*sin(2*pi-UavOrient+pi/4),0))] 
-            curobs = nodes[coordinatesToIndex(sNE, d_)]
             
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sNE[0],cur[1]+sNE[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[4]<=safety_margin:
-                    brake = True
-            
-        if sensorsValues[5] >=1 and sensorsValues[5] < sensRange:
+            if ((obs>=[0,0]) and(obs<=[width, height])):            
+                
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sNE !=[0,0]:            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[4]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
+                
+        if sensorsValues[5] >=.8 and sensorsValues[5] < sensRange:
             
             sSE=[int(round(int(sensorsValues[5])*cos(2*pi-UavOrient+7*pi/4),0)),-int(round(int(sensorsValues[5])*sin(2*pi-UavOrient+7*pi/4),0))]
-            curobs = nodes[coordinatesToIndex(sSE, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sSE[0],cur[1]+sSE[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[5]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):            
             
-        if sensorsValues[6] >=1 and sensorsValues[6] < sensRange:
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sSE !=[0,0]:            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[5]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
+            
+        if sensorsValues[6] >=.8 and sensorsValues[6] < sensRange:
             
             sSW=[int(round(int(sensorsValues[6])*cos(2*pi-UavOrient+5*pi/4),0)),-int(round(int(sensorsValues[6])*sin(2*pi-UavOrient+5*pi/4),0))] 
-                        
-            curobs = nodes[coordinatesToIndex(sSW, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sSW[0],cur[1]+sSW[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
+            if ((obs>=[0,0]) and(obs<=[width, height])):            
                             
-                if sensorsValues[6]<=safety_margin:
-                    brake = True
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sSW !=[0,0]:            
                     
-        if sensorsValues[7] >=1 and sensorsValues[7] < sensRange:
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[6]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
+                    
+        if sensorsValues[7] >=.8 and sensorsValues[7] < sensRange:
 
             sNW=[int(round(int(sensorsValues[7])*cos(2*pi-UavOrient+3*pi/4),0)),-int(round(int(sensorsValues[7])*sin(2*pi-UavOrient+3*pi/4),0))]      
-            curobs = nodes[coordinatesToIndex(sNW, d_)]
-            
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN:            
+            obs = [cur[0]+sNW[0],cur[1]+sNW[1]]
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if sensorsValues[7]<=safety_margin:
-                    brake = True
+            if ((obs>=[0,0]) and(obs<=[width, height])):             
+                
+                curobs = nodes[coordinatesToIndex(obs, d_)]
+                
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sNE !=[0,0]:            
                     
-        print  sensorsValues[4:8],  sNE, sSE, sSW, sNW       
-        return extendedObs, isDetected, brake
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if sensorsValues[7]<=safety_margin:
+                        print 'sensed <1.5'
+                        brake = True
+                    
+        print  sensorsValues[0:8],  sN,sE,sS,sW,sNE, sSE, sSW, sNW     
         sensorsValues = []  
+        return extendedObs, isDetected, brake
+          
 
 def DetectUnexpectedObsold(sensArea, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
     
