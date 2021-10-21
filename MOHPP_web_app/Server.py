@@ -13,7 +13,7 @@ sensedArea = Sensors.Sensors()
 
 my_options = {
     'mode': "chrome", #or "chrome-app",
-    'host': '10.0.0.252',
+    'host': 'localhost',
     'port': 8080,
 }
 
