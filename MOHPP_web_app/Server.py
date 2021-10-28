@@ -3,39 +3,47 @@ Created on Oct 13, 2021
 
 @author: nassim
 '''
+
 import eel, time
 from UavAndSensors import Sensors
 from threading import Thread
 
 Thread = None
-
+lastSensorsValues = [0 for i in range(8)]
 sensedArea = Sensors.Sensors()
 
 my_options = {
-    'mode': "chrome", #or "chrome-app",
-    'host': 'localhost',
-    'port': 8080,
+    'mode': "None", #or "chrome-app",
+
 }
 
 eel.init('webapp')
 
-
-
 @eel.expose
-def getTimess():
-    return time.strftime('%c')
+def getTVal():
+    while True:
+        sens= SensorsValues()
+        
+        eel.sleep(0.1)
+        return sens
+
 
 @eel.expose    
 def send_coordinates(uav):
     return uav.location.global_relative_frame.lon,uav.location.global_relative_frame.lat
 
-@eel.expose
+
+#@eel.expose
 def SensorsValues():
-    while True:
-        values =  sensedArea.getSensorsValues()
-        print values
+    while True:    
+        values =  sensedArea.getSensorsValues()        
+        
+        eel.sleep(.01)
         return values
-        eel.sleep(.2)
 
+def init():
+            
+    eel.spawn(SensorsValues)
 
-eel.start('miniGCS.html', options=my_options, suppress_error=True)
+    eel.start('miniGCS.html', my_options, block = False)
+#192.168.0.1:8080/miniGCS.html

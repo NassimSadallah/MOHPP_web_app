@@ -7,6 +7,7 @@ from math import floor, cos, sin, pi, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
+import Server
 
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -107,7 +108,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
     
     isDetected, brake = False, False
     sN, sE, sS, sW, sNE, sSE, sSW, sNW = [0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]
-    sensorsValues=sensors.getSensorsValues() #call the method which read the sensors' values sent from the arduino nano
+    sensorsValues=sensors#call the method which read the sensors' values sent from the arduino nano
     cur = [nodes[curIdx].abscice,nodes[curIdx].colonne] # save the x, y coordinates of the current position of the UAV
     
     if sensorsValues !=[]: 
@@ -131,7 +132,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[0]<=safety_margin:
-                        print 'sensed <1.5'
+                        
                         brake = True
         
         if sensorsValues[1] >=.8 and sensorsValues[1] < safety_margin:
@@ -152,7 +153,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[1]<=safety_margin:
-                        print 'sensed <1.5'
+                        
                         brake = True
         
         if sensorsValues[2] >=.8 and sensorsValues[2] < sensRange:
@@ -173,7 +174,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[2]<=safety_margin:
-                        print 'sensed <1.5'
+                  
                         brake = True
         
         if sensorsValues[3] >=.8 and sensorsValues[3] < sensRange:
@@ -194,7 +195,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[3]<=safety_margin:
-                        print 'sensed <1.5'
+                      
                         brake = True
                         
         if sensorsValues[4] >=.8 and sensorsValues[4] < sensRange:
@@ -216,7 +217,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[4]<=safety_margin:
-                        print 'sensed <1.5'
+                        
                         brake = True
                 
         if sensorsValues[5] >=.8 and sensorsValues[5] < sensRange:
@@ -237,7 +238,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[5]<=safety_margin:
-                        print 'sensed <1.5'
+                      
                         brake = True
             
         if sensorsValues[6] >=.8 and sensorsValues[6] < sensRange:
@@ -258,7 +259,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[6]<=safety_margin:
-                        print 'sensed <1.5'
+                      
                         brake = True
                     
         if sensorsValues[7] >=.8 and sensorsValues[7] < sensRange:
@@ -270,7 +271,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                 
                 curobs = nodes[coordinatesToIndex(obs, d_)]
                 
-                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sNE !=[0,0]:            
+                if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and sNW !=[0,0]:            
                     
                     isDetected = True
                     curobs.OBSTACLE = KNOWN_OBSTACLE
@@ -279,10 +280,11 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                     extendedObs.append(curobs)
                                 
                     if sensorsValues[7]<=safety_margin:
-                        print 'sensed <1.5'
+                       
                         brake = True
                     
-        print  sensorsValues[0:8],  sN,sE,sS,sW,sNE, sSE, sSW, sNW     
+        print  sensorsValues, sN,sE,sS,sW,sNE, sSE, sSW, sNW
+        Server.getTVal()     
         sensorsValues = []  
         return extendedObs, isDetected, brake
           

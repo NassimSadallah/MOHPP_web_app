@@ -17,6 +17,7 @@ from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
+import Server
 
 
 sitl_connect ='127.0.0.1:14550'
@@ -25,7 +26,7 @@ real_connect ='/dev/ttyAMA0'
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 extendedObs = []
-sensedArea = Sensors()
+
 
 #reads the binary map from the binarymaps package
 binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
@@ -49,7 +50,9 @@ connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('
 '''
 
 UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
-
+Server.init()
+time.sleep(3)
+Server.getTVal()
 VeMeth.UAV().takeoff(5.0, UAV)
 heading = UavHeading(UAV.heading)
 default_alt = UAV.location.local_frame.down
@@ -83,13 +86,14 @@ while nodeIdx !=goal_index:
         plannedPath = OFPSearch.Gradient(nodeIdx, goal_index, CDM, d_)
         
     globalPath.append(nextStep)
+    
     #sensing the surrounding area with the embedded sensors
-    extendedObs, isDetected, brake = DetectUnexpectedObs(sensedArea,UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
+    extendedObs, isDetected, brake = DetectUnexpectedObs(Server.getTVal(), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
     print isDetected, brake, len(extendedObs)
     #brake = False
     if brake:#if brake is triggered, we must switch to online process
         print 'replanning ...'
-        nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sensedArea)
+        nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, Server.getTVal())
         isReplanning = True
 
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice

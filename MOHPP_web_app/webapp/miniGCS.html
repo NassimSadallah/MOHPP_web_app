@@ -7,10 +7,9 @@
 
 <script type="text/javascript" src="eel.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.4.2.min.js"></script>
-	
 <script>
         async function getVal() {
-  let value = await eel.SensorsValues()();
+  let value = await eel.getTVal()();
    console.log( value);
    plotVal('plot', value);
    request_values();
@@ -18,7 +17,7 @@
   }
  
            
-eel.expose(request_values);
+//eel.expose(request_values);
 function request_values(){
   getVal();
             	
@@ -30,7 +29,7 @@ function plotVal(div, value){
   
   var theta = Math.PI/2 
   for (let i = 0; i<4;i++){
-      if (value[i]>0.5 && value[i]<4){
+      if (value[i]>0.05 && value[i]<4){
       var x = [0,value[i]*Math.cos(Math.PI*2 +theta)];
       var y = [0,value[i]*Math.sin(Math.PI*2 +theta)];
       }
@@ -43,7 +42,7 @@ function plotVal(div, value){
   }
   var theta = Math.PI/4
     for (let i = 4; i<8;i++){
-      if (value[i]>0.5 && value[i]<4){
+      if (value[i]>0.05 && value[i]<4){
       var x = [0,value[i]*Math.cos(Math.PI*2 +theta)];
       var y = [0,value[i]*Math.sin(Math.PI*2 +theta)];
       }
@@ -70,9 +69,12 @@ Plotly.newPlot('plot', data, layout);
 getVal();
 
 </script>
+	
+
+
    </head>
      <body>
          <div id='plot'></div>
-    </body>
+</body>
 </html>
 
