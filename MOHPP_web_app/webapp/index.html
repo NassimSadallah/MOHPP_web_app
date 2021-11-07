@@ -73,11 +73,20 @@ Plotly.newPlot('plot', data, layout);
 <link rel="stylesheet" href="css/rendering.css">	
 
 
+
    </head>
      <body>
          <header>
              <div id='control'>
-                 <input class = "but" type="button" onclick="/js/jsFunction" value="Connect" >
+                 <input id= "cnct" class = "but" type="button" onclick="connect()" value="Connect" >
+                   <script>
+    		     //Connection script
+	              async function connect(){
+      		      let value = await eel.connect()();
+		      console.log(value);
+		      document.getElementById('cnct').value = "disconnect";
+    		      }
+  		    </script>
                  <input class = "but" type="button" onclick="" value="Guided" >
          	<input class = "but" type="button" onclick="" value="Take-off">
          	<input class = "but" type="button" onclick="" value="Land">
@@ -95,6 +104,8 @@ Plotly.newPlot('plot', data, layout);
          
          <section>
              <nav>
+                 <p>Location:<span id="location" style="color:white"></p>
+                 <p> Ready:<span id="arm" style="color:white"></p>
                  <p >Battery:
                      <span id="battery" >
                        <script>
@@ -115,6 +126,9 @@ Plotly.newPlot('plot', data, layout);
              	         %
                      </span> 
                  </p>
+                 <p> Mode:<span id="mode" style="color:white"></p>
+                 <p> HeartBeat:<span id="hrtbeat" style="color:white"></p>
+                 <p> Head (Deg):<span id="head" style="color:white"></p>
                  <p>Altitude: <span id="alt" style="color:white">4.25 m</span></p>
                  <p> Speed: <span id="spd"style="color:white">1.25 m/s</span></p>
              </nav>
