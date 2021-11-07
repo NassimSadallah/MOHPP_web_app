@@ -17,11 +17,9 @@ from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
 from UavAndSensors.Sensors import Sensors
 import os,time
 from math import floor
-import Server
 
 
-sitl_connect ='127.0.0.1:14550'
-real_connect ='/dev/ttyAMA0' 
+UAV = None
 
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
@@ -49,10 +47,8 @@ plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
 connection to vehicle and controlling SITL:('127.0.0.1:14550', 921600), Real: ('/dev/ttyAMA0', baud=921600) 
 '''
 
-UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
-Server.init()
 time.sleep(3)
-Server.getTVal()
+
 VeMeth.UAV().takeoff(5.0, UAV)
 heading = UavHeading(UAV.heading)
 default_alt = UAV.location.local_frame.down

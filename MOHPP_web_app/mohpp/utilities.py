@@ -7,7 +7,7 @@ from math import floor, cos, sin, pi, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
-import Server
+
 
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -284,7 +284,7 @@ def DetectUnexpectedObs(sensors, UavOrient, curIdx, nodes, extendedObs, safety_m
                         brake = True
                     
         print  sensorsValues, sN,sE,sS,sW,sNE, sSE, sSW, sNW
-        Server.getTVal()     
+            
         sensorsValues = []  
         return extendedObs, isDetected, brake
           

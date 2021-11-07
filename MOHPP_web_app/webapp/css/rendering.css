@@ -17,8 +17,8 @@ float : left;
   height: 85%; /* only for demonstration, should be removed */
   background: #222629;
   padding: 0px;
-  text-align: center;
-  font-size: 22px;
+  text-align: left;
+  font-size: 20px;
   color: #86c232;
 }
 article {
