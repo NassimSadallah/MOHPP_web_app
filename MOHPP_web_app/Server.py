@@ -10,10 +10,11 @@ from threading import Thread
 
 Thread = None
 lastSensorsValues = [0 for i in range(8)]
-sensedArea = Sensors.Sensors()
+sensedArea = 0#Sensors.Sensors()
 
 my_options = {
     'mode': "None", #or "chrome-app",
+    'port': 8000
 
 }
 
@@ -45,5 +46,6 @@ def init():
             
     eel.spawn(SensorsValues)
 
-    eel.start('miniGCS.html', my_options, block = False)
+    eel.start('index.html', my_options, block = False)
 #192.168.0.1:8080/miniGCS.html
+eel.start('index.html', my_options, block = True)
