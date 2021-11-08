@@ -72,34 +72,72 @@ Plotly.newPlot('plot', data, layout);
 
 <link rel="stylesheet" href="css/rendering.css">	
 
-
-
    </head>
      <body>
          <header>
              <div id='control'>
-                 <input id= "cnct" class = "but" type="button" onclick="connect()" value="Connect" >
-                   <script>
+                
+                <input id= "cnct" class = "but" type="button" onclick="connect()" value="Connect" ></input>
+                <p class="but">safety:<input type="range" id="as" name="a" value="25" min="1" max="99" onchange="document.getElementById ('a').value=this.value;" >
+             	  <output type="text" id="a" >25</output></input>%</p> 
+
+                <input class = "but" type="button" onclick="Launch()" value="Launch" ></input>
+         	<input id = "tkoff" class = "but" type="button" onclick="takeoff()" value="Take-off"><span> <input id= "valtakoff" type="text" value="0"> m</span></input>
+         	<input id = "lnd" class = "but" type="button" onclick="" value="Land"></input>
+         	<p id = "mod" class= "but" > Mode:<span id="mode" style="color:green"> -- </span></p>
+		<script>
     		     //Connection script
 	              async function connect(){
       		      let value = await eel.connect()();
 		      console.log(value);
-		      document.getElementById('cnct').value = "disconnect";
+		      
+		      document.getElementById('cnct').value = "connected";
+		      document.getElementById('mode').innerHTML = value[3]
+		      document.getElementById('cnct').disabled = true;
+    		      document.getElementById("battery").innerHTML = value[2]+" %";
+             			if (value[2]>=50){
+             			document.getElementById("battery").style.color="white";}
+             			else if(value[2]>=25 && value[2]<50){
+             			document.getElementById("battery").style.color="orange";}
+             			else if(0<=value[2]<25){
+             			document.getElementById("battery").style.color="red";}
     		      }
-  		    </script>
-                 <input class = "but" type="button" onclick="" value="Guided" >
-         	<input class = "but" type="button" onclick="" value="Take-off">
-         	<input class = "but" type="button" onclick="" value="Land">
-		        	
+    		      async function Launch(){
+    		       let done = await eel.Launch()();
+    		       console.log(done);
+    		      }
+    		      eel.expose(saturation);
+    		      function saturation(){
+    		      	var val= document.getElementById ('a').value;
+    		      	return val;
+    		      }
+    		      async function takeoff(){
+    		      	
+    		      	let ok = await eel.take_off(document.getElementById('valtakoff').value);
+    		      	console.log(ok);
+    		      	datalecture();
+    		      }
+    		      
+    		      async function datalecture(){
+    		        let data = await eel.dataLecture()();
+    		       
+    		        document.getElementById('location').innerHTML = data[0];
+    		        document.getElementById('battery').innerHTML = data[1]+" %";
+    		        document.getElementById('head').innerHTML = data[2]+ " °";
+    		        document.getElementById('alt').innerHTML = data[3] + " m";
+    		        document.getElementById('spd').innerHTML = data[4]+" m/s";
+    		        document.getElementById('mode').innerHTML = data[5]
+    		        update();
+    		      }
+    		      function update(){
+    		      	datalecture();
+    		      }
+  		 </script>        
+  		 	
              </div>
+             
              <div>
-             	<p>safety: 
-             		<input type="range" id="as" name="a" value="25" min="1" max="99" onchange="document.getElementById ('a').value=this.value;" >
-             	<output type="text" id="a" >25</output>
-             		</input>
-             		
-             		<span>%</span>
-             	</p> </div>
+     </div>
          </header>
          
          <section>
@@ -107,30 +145,13 @@ Plotly.newPlot('plot', data, layout);
                  <p>Location:<span id="location" style="color:white"></p>
                  <p> Ready:<span id="arm" style="color:white"></p>
                  <p >Battery:
-                     <span id="battery" >
-                       <script>
-             		    function Battery(id){
-             			var x = Math.floor(Math.random() * 100);
-             			console.log(x);
-             			document.getElementById(id).innerHTML = x;
-             			if (x>=50){
-             			document.getElementById(id).style.color="white";}
-             			else if(x>=25 && x<50){
-             			document.getElementById(id).style.color="orange";}
-             			else if(0<=x<25){
-             			document.getElementById(id).style.color="red";}
-             			return x
-             			}
-             		    Battery("battery");
-             	        </script>
+                     <span id="battery" >--
              	         %
                      </span> 
-                 </p>
-                 <p> Mode:<span id="mode" style="color:white"></p>
-                 <p> HeartBeat:<span id="hrtbeat" style="color:white"></p>
-                 <p> Head (Deg):<span id="head" style="color:white"></p>
-                 <p>Altitude: <span id="alt" style="color:white">4.25 m</span></p>
-                 <p> Speed: <span id="spd"style="color:white">1.25 m/s</span></p>
+                 </p>                 
+                 <p> Head (Deg):<span id="head" style="color:white"> -- °</p>
+                 <p>Altitude: <span id="alt" style="color:white">-- m</span></p>
+                 <p> Speed: <span id="spd"style="color:white">-- m/s</span></p>
              </nav>
              <article>
                  <div id='plot'> </div>
