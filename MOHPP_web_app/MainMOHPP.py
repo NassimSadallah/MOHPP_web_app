@@ -10,37 +10,88 @@ Created on Jul 12, 2021
 @author: nassim
 
 '''
-
+import os,time, eel
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
 from UavAndSensors.Sensors import Sensors
-import os,time
+
 from math import floor
 
-
+sitl_connect ='127.0.0.1:14550'
+real_connect ='/dev/ttyAMA0' 
 UAV = None
-
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 extendedObs = []
+my_options = {
+    'mode': "None", #or "chrome-app",
+    'port': 8000
+
+}
+
+eel.init('webapp')
+
+@eel.expose
+def connect():
+    global UAV
+    UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
+    location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
+    battery = UAV.battery.level
+    alt = UAV.location.global_relative_frame.alt
+    spd = UAV.airspeed
+    head = UAV.heading
+    mode = UAV.mode.name
+    armable = UAV.is_armable
+    return location, armable, battery, mode, head, alt, round(spd,2)
+
+@eel.expose
+def Launch():
+    alpha = 0.01* int(str(eel.saturation()()))
+
+    #reads the binary map from the binarymaps package
+    binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
+    
+    #defines the obstacles and return the corresponding indexed node list
+    Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
+    
+    #gets the corresponding indices of the cells start and goal
+    start_index = utilities.coordinatesToIndex(start_coordinates, d_)
+    goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
+    
+    globalPath = []
+    #computes the velocity and the travel time at each node of the map
+    CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
+    #wavePlot(d_[0], d_[1]/d_[0], CDM)
+    plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
+    return 'Done !'
+
+@eel.expose
+def take_off(h):
+    VeMeth.UAV().takeoff(float(str(h)), UAV)
+    return 'ok'
+
+@eel.expose
+def dataLecture():
+    location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
+    battery = UAV.battery.level
+    alt = UAV.location.global_relative_frame.alt
+    spd = UAV.airspeed
+    head = UAV.heading
+    mode = UAV.mode.name
+    
+    return location, battery, head, round(alt,1), round(spd,2), mode
+
+@eel.expose
+def Land():
+    VeMeth.UAV.Land(UAV)
+    
+
+eel.start('index.html', my_options, block = True)
 
 
-#reads the binary map from the binarymaps package
-binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
 
-#defines the obstacles and return the corresponding indexed node list
-Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
-
-#gets the corresponding indices of the cells start and goal
-start_index = utilities.coordinatesToIndex(start_coordinates, d_)
-goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
-
-globalPath = []
-#computes the velocity and the travel time at each node of the map
-CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], 0.3, 1.0, d_, seq=1,block=block)
-#wavePlot(d_[0], d_[1]/d_[0], CDM)
-plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
+"""
 
 
 '''
@@ -93,3 +144,4 @@ while nodeIdx !=goal_index:
         isReplanning = True
 
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+"""

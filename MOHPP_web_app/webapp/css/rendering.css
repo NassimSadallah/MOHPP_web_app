@@ -18,7 +18,7 @@ float : left;
   background: #222629;
   padding: 0px;
   text-align: left;
-  font-size: 20px;
+  font-size: 16px;
   color: #86c232;
 }
 article {
@@ -39,17 +39,24 @@ footer {
   height : 90%
 
 }
-#plot {
+#cntrl {
+	margin: 1px 40% 1px 1px;
 
 }
 
 .but{
-
-	background-color: white;
-	margin : auto ;
-	
-	
+  
+	display: inline-block;
+	font-size:16px;
+	margin: auto;
+		
 }
+p.mod{
+  display:inline-block;
+  font-size: 15px;
+  color: white;
+}
+
 /* Optional: Makes the sample page fill the window. */
 /*html,
 body {

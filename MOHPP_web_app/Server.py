@@ -3,7 +3,7 @@ Created on Oct 13, 2021
 
 @author: nassim
 '''
-
+"""
 import eel
 
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
@@ -46,8 +46,7 @@ def SensorsValues():
 
 @eel.expose
 def connect():
-    sitl_connect ='127.0.0.1:14550'
-    real_connect ='/dev/ttyAMA0' 
+
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = UAV.location.global_frame
     battery = UAV.battery
@@ -66,3 +65,4 @@ def init():
     eel.start('index.html', my_options, block = False)
 #192.168.0.1:8080/miniGCS.html
 eel.start('index.html', my_options, block = True)
+"""

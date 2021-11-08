@@ -26,14 +26,14 @@ class UAV:
         while not vehicle.is_armable:
             print(" Waiting for vehicle initialization...")
             time.sleep(1.5)
-
+        """
         vehicle.mode = VehicleMode("GUIDED")
         print(' setting UAV mode to GUIDED...')
         while not vehicle.mode =="GUIDED":
             
             vehicle.mode = VehicleMode("GUIDED")
             time.sleep(1)
-        
+        """
     def takeoff(self,height,vehicle):
         '''
         Arming the vehicle, height in meters and vehicle is the instantiated object
@@ -54,7 +54,10 @@ class UAV:
                 break
             time.sleep(1.5)    
         return round(vehicle.location.local_frame.down,5)
-
+    
+    def Land(self,vehicle):
+        vehicle.mode = VehicleMode("LAND")
+        
     def send_NED_velocity(self,vel_x, vel_y, vel_z,vehicle):    
         '''
         Move vehicle in direction based on specified velocity vectors (x, y, z).
