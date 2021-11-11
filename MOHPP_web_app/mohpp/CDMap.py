@@ -11,7 +11,7 @@ from utilities import INFINI, getmaxcost, wavePlot
 def get_Vel_Cost(nodes, srcObs, Start, Goal, alpha, Velocity, d_, seq = 0, block = 0):
     
     print '--> Velocity map...'    
-    vmap = FastMarching.fmm(srcObs, -1 , nodes, d_, cross =True, seq = seq, block = block)
+    vmap = FastMarching.fmm(srcObs, -1 , nodes, d_, cross =False, seq = seq, block = block)
     #vmap.processFMM()
     '''
     Scaling the velocity to the MAX velocity of the UAV
