@@ -6,15 +6,19 @@ Created on Jul 8, 2021
 
 import time   
 import serial, serial.tools.list_ports
+from rplidar import RPLidar
+
 
 
 class Sensors(object):
     
     def __init__(self):
         
-        self.ser = self.initSensors()
+        self.ser = self.initSensors('lidar')
+        lidar = RPLidar(self.ser)
+        self.getLidarValues(lidar)
 
-    def initSensors(self):
+    def initSensors(self, sen):
         print('looking for USB communication ...')
 
         myports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
@@ -22,8 +26,14 @@ class Sensors(object):
             
             if 'ttyUSB' in p[0]:
                 port = p
-                ser = serial.Serial(port[0], 9600, timeout=1)
-                ser.flush()
+                ser = None
+                if sen=='hcsr04':
+                    ser = serial.Serial(port[0], 9600, timeout=1)
+                    ser.flush()
+                    
+                elif sen=='lidar':
+                    ser = port[0]
+                
                 print('USB serial communication activated on port!', port[0])
                 return ser
    
@@ -48,3 +58,23 @@ class Sensors(object):
                     return sensorsValues    
         else:
             exit            
+
+    def getLidarValues(self, lidar):
+        
+        while True:
+            info = lidar.get_info()
+            print(info)
+        
+        health = lidar.get_health()
+        print(health)
+        
+        for i, scan in enumerate(lidar.iter_scans()):
+            print('%d: Got %d measurments' % (i, len(scan)))
+            #print(lidar.iter_scans())
+            if i > 500:
+                break
+        
+        lidar.stop()
+        lidar.stop_motor()
+        lidar.disconnect()        
+                

@@ -34,6 +34,7 @@ eel.init('webapp')
 
 @eel.expose
 def connect():
+    sens = Sensors()
     global UAV
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
