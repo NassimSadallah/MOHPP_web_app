@@ -4,9 +4,10 @@ Created on Jul 8, 2021
 @author: nassim
 '''
 
-import time   
+import time,sys   
 import serial, serial.tools.list_ports
 from rplidar import RPLidar
+#import rplidar as RPLidar
 
 
 
@@ -15,10 +16,15 @@ class Sensors(object):
     def __init__(self):
         
         self.ser = self.initSensors('lidar')
-        lidar = RPLidar(self.ser)
-        self.getLidarValues(lidar)
-
-    def initSensors(self, sen):
+        try:
+            self.lidar = RPLidar(self.ser)
+            print(self.lidar.get_health())
+            #self.getLidarValues(self.lidar)
+        except:
+            
+            sys.exit('No Lidar - PROCESS ABORTED')
+        
+    def initSensors(self, sen):#sen for sensor type: hs-rc04 or Lidar
         print('looking for USB communication ...')
 
         myports = [tuple(p) for p in list(serial.tools.list_ports.comports())]
@@ -33,7 +39,7 @@ class Sensors(object):
                     
                 elif sen=='lidar':
                     ser = port[0]
-                
+                    
                 print('USB serial communication activated on port!', port[0])
                 return ser
    
@@ -60,21 +66,15 @@ class Sensors(object):
             exit            
 
     def getLidarValues(self, lidar):
-        
-        while True:
-            info = lidar.get_info()
-            print(info)
-        
-        health = lidar.get_health()
-        print(health)
-        
+
         for i, scan in enumerate(lidar.iter_scans()):
-            print('%d: Got %d measurments' % (i, len(scan)))
-            #print(lidar.iter_scans())
-            if i > 500:
+            #print('%d: Got %d measurments' % (i, len(scan)))
+            
+            if i > len(scan):
                 break
-        
-        lidar.stop()
-        lidar.stop_motor()
-        lidar.disconnect()        
+            print((scan[:][1:3]))
+        self.lidar.stop()
+        self.lidar.stop_motor()
+        self.lidar.disconnect()   
+
                 

@@ -36,6 +36,7 @@ eel.init('webapp')
 def connect():
     sens = Sensors()
     global UAV
+    testLidar(sens.ser)
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
@@ -87,6 +88,39 @@ def dataLecture():
 def Land():
     VeMeth.UAV.Land(UAV)
     
+
+@eel.expose
+def testLidar(usb):
+    from rplidar import RPLidar
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import matplotlib.animation as animation
+    PORT_NAME =usb# '/dev/ttyUSB'
+    DMAX = 7000
+    IMIN = 0
+    IMAX = 500
+    def update_line(num, iterator, line):
+        scan = next(iterator)
+        offsets = np.array([(np.radians(meas[1]), meas[2]) for meas in scan])
+        line.set_offsets(offsets)
+        intens = np.array([meas[0] for meas in scan])
+        line.set_array(intens)
+        return line,
+    def run():
+        lidar = RPLidar(PORT_NAME)
+        fig = plt.figure()
+        ax = plt.subplot(111, projection='polar')
+        line = ax.scatter([0, 0], [0, 0], s=5, c=[IMIN, IMAX],
+                               cmap='Greys_r', lw=0)
+        ax.set_rmax(DMAX)
+        ax.grid(True)
+        iterator = lidar.iter_scans()
+        ani = animation.FuncAnimation(fig, update_line,
+            fargs=(iterator, line), interval=5)
+        plt.show()
+        lidar.stop()
+        lidar.disconnect()
+    run()
 
 eel.start('index.html', my_options, block = True)
 

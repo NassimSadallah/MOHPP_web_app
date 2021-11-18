@@ -83,7 +83,7 @@ Plotly.newPlot('plot', data, layout);
 
                 <input class = "but" type="button" onclick="Launch()" value="Launch" ></input>
          	<input id = "tkoff" class = "but" type="button" onclick="takeoff()" value="Take-off"><span> <input id= "valtakoff" type="text" value="0"> m</span></input>
-         	<input id = "lnd" class = "but" type="button" onclick="" value="Land"></input>
+         	<input id = "lnd" class = "but" type="button" onclick="testLidar()" value="Test"></input>
          	<p id = "mod" class= "but" > Mode:<span id="mode" style="color:green"> -- </span></p>
 		<script>
     		     //Connection script
@@ -101,6 +101,7 @@ Plotly.newPlot('plot', data, layout);
              			document.getElementById("battery").style.color="orange";}
              			else if(0<=value[2]<25){
              			document.getElementById("battery").style.color="red";}
+             	      
     		      }
     		      async function Launch(){
     		       let done = await eel.Launch()();
@@ -132,6 +133,7 @@ Plotly.newPlot('plot', data, layout);
     		      function update(){
     		      	datalecture();
     		      }
+    		      
   		 </script>        
   		 	
              </div>
