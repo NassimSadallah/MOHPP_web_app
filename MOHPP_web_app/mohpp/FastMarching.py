@@ -172,7 +172,7 @@ def getMinValueInDim(self,idx, dim, crossing):
             return self.nodesList[self.minneighborsList[1]].cost             
    
 def solveEikonalNDims(self,idx,dim):
-    print dim
+
     curnode = self.nodesList[idx]
     
     if dim==1:

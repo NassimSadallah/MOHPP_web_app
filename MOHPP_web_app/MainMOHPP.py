@@ -23,20 +23,24 @@ real_connect ='/dev/ttyAMA0'
 UAV = None
 start_coordinates, goal_coordinates = [151,57],[20,50]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
+plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
 extendedObs = []
 my_options = {
-    'mode': "None", #or "chrome-app",
+    'mode': "chrome-app", #or "chrome-app",
     'port': 8000
 
 }
 
 eel.init('webapp')
 
+sensor = 'hcsr04'#'lidar'hcsr04
+sens = Sensors(sensor)
+
 @eel.expose
 def connect():
-    sens = Sensors()
+    
     global UAV
-    testLidar(sens.ser)
+    
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
@@ -45,10 +49,13 @@ def connect():
     head = UAV.heading
     mode = UAV.mode.name
     armable = UAV.is_armable
+    
     return location, armable, battery, mode, head, alt, round(spd,2)
 
 @eel.expose
 def Launch():
+    
+    global plannedPath, Nodes, goal_index, CDM,globalPath, start_index, extendedObs     
     alpha = 0.01* int(str(eel.saturation()()))
 
     #reads the binary map from the binarymaps package
@@ -70,22 +77,75 @@ def Launch():
 
 @eel.expose
 def take_off(h):
+    
+    global plannedPath, Nodes, goal_index, CDM,globalPath,start_index, extendedObs 
+    
     VeMeth.UAV().takeoff(float(str(h)), UAV)
+    heading = UavHeading(UAV.heading)
+    default_alt = UAV.location.local_frame.down
+    nextStep = plannedPath[0]
+    plannedPath.remove(plannedPath[0])
+    nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+    
+    isReplanning = False
+    
+    while nodeIdx !=goal_index:
+        
+        if not isReplanning:
+            
+            current = nextStep
+            nextStep = plannedPath[0]
+            nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+            nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
+            plannedPath.remove(plannedPath[0])
+            n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
+            print n, e, d, nodeVel,utilities.sqrt_dist(n, e, d)
+            #set the appropriate speed at which the UAV should travel through the point
+            UAV.airspeed = nodeVel
+            #send command with the north, east, down( -z) distance to move on 
+            VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
+            #pause the script for the corresponding travel time
+            time.sleep(utilities.sqrt_dist(n, e, d))
+            
+        else:
+            #we recompute the global path once we bypassed the dynamic threats
+            current = nextStep
+            plannedPath = OFPSearch.Gradient(nodeIdx, goal_index, CDM, d_)
+            
+        globalPath.append(nextStep)
+        
+        #sensing the surrounding area with the embedded sensors
+        extendedObs, isDetected, brake = DetectUnexpectedObs('hcsr04', sens.getSensorValues(sensor), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
+        print isDetected, brake, len(extendedObs)
+        #brake = False
+        if brake:#if brake is triggered, we must switch to online process
+            print 'replanning ...'
+            nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sens.getSensorValues(sensor), 'hcsr04')
+            isReplanning = True
+    
+        nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+    time.sleep(1)
+    Land()
+
     return 'ok'
 
 @eel.expose
 def dataLecture():
+    
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
     alt = UAV.location.global_relative_frame.alt
     spd = UAV.airspeed
     head = UAV.heading
     mode = UAV.mode.name
+    theta=sens.getSensorValues(sensor)#, dist = sens.getLidarValues()
     
-    return location, battery, head, round(alt,1), round(spd,2), mode
+    #print theta#, dist
+    return location, battery, head, round(alt,1), round(spd,2), mode, theta#, dist
 
 @eel.expose
 def Land():
+    print('Landing mode activated ...')
     VeMeth.UAV.Land(UAV)
     
 
@@ -98,30 +158,36 @@ def testLidar(usb):
     PORT_NAME =usb# '/dev/ttyUSB'
     DMAX = 7000
     IMIN = 0
-    IMAX = 500
+    IMAX = 100
     def update_line(num, iterator, line):
         scan = next(iterator)
         offsets = np.array([(np.radians(meas[1]), meas[2]) for meas in scan])
         line.set_offsets(offsets)
         intens = np.array([meas[0] for meas in scan])
+        #print intens
+        #print offsets
+        
         line.set_array(intens)
+        #time.sleep(2)
         return line,
     def run():
         lidar = RPLidar(PORT_NAME)
+        print lidar.get_info()
         fig = plt.figure()
         ax = plt.subplot(111, projection='polar')
         line = ax.scatter([0, 0], [0, 0], s=5, c=[IMIN, IMAX],
-                               cmap='Greys_r', lw=0)
+                               cmap='Greys_r', lw=4)
         ax.set_rmax(DMAX)
         ax.grid(True)
-        iterator = lidar.iter_scans()
+        iterator = lidar.iter_scans(scan_type='normal')
         ani = animation.FuncAnimation(fig, update_line,
-            fargs=(iterator, line), interval=5)
+            fargs=(iterator, line), interval=1)
         plt.show()
         lidar.stop()
         lidar.disconnect()
     run()
 
+#testLidar(sens.ser)
 eel.start('index.html', my_options, block = True)
 
 

@@ -88,12 +88,13 @@ Plotly.newPlot('plot', data, layout);
 		<script>
     		     //Connection script
 	              async function connect(){
+	              document.getElementById('cnct').disabled = true;
       		      let value = await eel.connect()();
 		      console.log(value);
 		      
 		      document.getElementById('cnct').value = "connected";
 		      document.getElementById('mode').innerHTML = value[3]
-		      document.getElementById('cnct').disabled = true;
+		      
     		      document.getElementById("battery").innerHTML = value[2]+" %";
              			if (value[2]>=50){
              			document.getElementById("battery").style.color="white";}
@@ -101,36 +102,46 @@ Plotly.newPlot('plot', data, layout);
              			document.getElementById("battery").style.color="orange";}
              			else if(0<=value[2]<25){
              			document.getElementById("battery").style.color="red";}
-             	      
+             	      datalecture();
     		      }
+    		      //launch the MOHPP 
     		      async function Launch(){
+    		       //datalecture();
     		       let done = await eel.Launch()();
     		       console.log(done);
     		      }
+    		      //saturation expose to python
     		      eel.expose(saturation);
     		      function saturation(){
     		      	var val= document.getElementById ('a').value;
     		      	return val;
     		      }
+    		      //takeoff command
     		      async function takeoff(){
     		      	
     		      	let ok = await eel.take_off(document.getElementById('valtakoff').value);
     		      	console.log(ok);
-    		      	datalecture();
+    		      	
     		      }
-    		      
+    		      //datalecture
     		      async function datalecture(){
     		        let data = await eel.dataLecture()();
-    		       
+    		        
     		        document.getElementById('location').innerHTML = data[0];
     		        document.getElementById('battery').innerHTML = data[1]+" %";
     		        document.getElementById('head').innerHTML = data[2]+ " °";
     		        document.getElementById('alt').innerHTML = data[3] + " m";
     		        document.getElementById('spd').innerHTML = data[4]+" m/s";
     		        document.getElementById('mode').innerHTML = data[5]
+    		        
+    		        
+    		        console.log(data[6]);
+    		        //console.log(data[7])
+    		        
     		        update();
     		      }
     		      function update(){
+    		     
     		      	datalecture();
     		      }
     		      
