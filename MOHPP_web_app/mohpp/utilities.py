@@ -104,13 +104,17 @@ def locateBestIdx(l):
 def UavHeading(heading):
     return heading*pi/180
 
+def degToCartesian(deg):
+    return deg*pi/180
+
 def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs, safety_margin, sensRange, d_):
     
     isDetected, brake = False, False
-    sensorsValues=sensors#call the method which read the sensors' values sent from the arduino nano
+    
     cur = [nodes[curIdx].abscice,nodes[curIdx].colonne] # save the x, y coordinates of the current position of the UAV    
     
     if sensType == 'hcsr04':
+        sensorsValues=sensors#call the method which read the sensors' values sent from the arduino nano
         sN, sE, sS, sW, sNE, sSE, sSW, sNW = [0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]
 
         if sensorsValues !=[]: 
@@ -285,16 +289,36 @@ def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs
                            
                             brake = True
                         
-            print  sensorsValues, sN,sE,sS,sW,sNE, sSE, sSW, sNW
-        
-                
+            #print  sensorsValues, sN,sE,sS,sW,sNE, sSE, sSW, sNW   
             sensorsValues = []  
         
-        elif sensType=='lidar':#if lidar is the integrated sensor
+    elif sensType=='lidar':#if lidar is the integrated sensor
+        
+        sensorsValues = sensors.items()
+        cartesval = []
+        for s in sensorsValues:
             
-            sensorsValues = []
+            cartesianS = [int(round(int(s[1])*cos(2*pi-UavOrient+degToCartesian(s[0])),0)),-int(round(int(s[1])*sin(2*pi-UavOrient+degToCartesian(s[0])),0))]
+            obs = [cur[0]+cartesianS[0],cur[1]+cartesianS[1]]
+            cartesval.append(cartesianS)
+            curobs = nodes[coordinatesToIndex(obs, d_)]
+                    
+            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]:            
+                
+                isDetected = True
+                curobs.OBSTACLE = KNOWN_OBSTACLE
+                curobs.TAG = NEW_FORBIDDEN
+                curobs.cost = INFINI
+                extendedObs.append(curobs)
+                            
+                if s[1]<=safety_margin:
+                   
+                    brake = True
             
-        return extendedObs, isDetected, brake
+                #print obs, curobs.indice
+
+            
+    return extendedObs, isDetected, brake#cartesval#
           
 
 

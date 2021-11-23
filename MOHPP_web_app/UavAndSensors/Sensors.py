@@ -66,7 +66,7 @@ class Sensors(object):
             scan = next(self.iterator)
 
             for meas in scan:#np.array([meas[1] for meas in scan])
-                theta[meas[1]] = meas[2]
+                theta[meas[1]] = meas[2]*0.001
             
             return theta#, Dist
         

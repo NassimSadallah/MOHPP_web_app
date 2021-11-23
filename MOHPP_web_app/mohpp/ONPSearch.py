@@ -5,8 +5,11 @@ Created on Jul 8, 2021
 @author: nassim
 '''
 
-from utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs
+from mohpp.utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs,sqrt_dist,getNorth_East_Down
 import AStar
+from UavAndSensors import VehiclesMethods as VeMeth
+import time
+from math import floor
 
 def ObsInPath(l, nodes, d_):
 
@@ -17,18 +20,29 @@ def ObsInPath(l, nodes, d_):
     return False
         
     
-def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors, sensType):
+def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors, sensType, UAV, default_alt):
     
-    current = start
+    current,curCoord = start, indexToCoordinates(start, d_)
     replannedPath = []
-   
+    onpsPath = []
     while extendedObs !=[]:
         
-        if replannedPath !=[]:
-            print "replanned ",len(replannedPath), replannedPath[0]
+        if replannedPath !=[] and replannedPath !=None:
+            print "replanned ",len(replannedPath), replannedPath
             coords = replannedPath[0]
-            current = coordinatesToIndex(coords, d_)
             replannedPath.remove(coords)
+            current = coordinatesToIndex(coords, d_)
+            nodeVel = nodes[current].v
+            n, e, d = getNorth_East_Down(curCoord, coords, UAV.location.local_frame.down, default_alt)
+            print n, e, d, nodeVel,sqrt_dist(n, e, d)
+            #set the appropriate speed at which the UAV should travel through the point
+            UAV.airspeed = nodeVel
+            #send command with the north, east, down( -z) distance to move on 
+            VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
+            #pause the script for the corresponding travel time
+            time.sleep(sqrt_dist(n, e, d))
+
+            onpsPath.append(coords)
             
             extendedObs, is_detected, brake = DetectUnexpectedObs(sensType,sensors, heading, current, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes, d_)
@@ -49,7 +63,7 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
         if replannedPath ==[] and not brake:
             extendedObs = []
                 
-    return replannedPath[-1]
+    return onpsPath[-1]
             
                 
 """

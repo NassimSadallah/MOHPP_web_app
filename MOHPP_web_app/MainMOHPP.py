@@ -21,7 +21,7 @@ from math import floor
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
 UAV = None
-start_coordinates, goal_coordinates = [151,57],[20,50]
+start_coordinates, goal_coordinates = [150,70],[50,15]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
 extendedObs = []
@@ -33,14 +33,21 @@ my_options = {
 
 eel.init('webapp')
 
-sensor = 'hcsr04'#'lidar'hcsr04
-sens = Sensors(sensor)
+sensorType, sensor = '', None#'lidar'#'lidar'hcsr04
+
 
 @eel.expose
-def connect():
+def getTVal():
+    return take_off(1)
+
+
+@eel.expose
+def connect(sens):
     
-    global UAV
-    
+    global UAV, sensorType, sensor
+    sensorType = sens
+    print sensorType
+    sensor = Sensors(sensorType)    
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
@@ -59,7 +66,7 @@ def Launch():
     alpha = 0.01* int(str(eel.saturation()()))
 
     #reads the binary map from the binarymaps package
-    binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
+    binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/Cerist.png")
     
     #defines the obstacles and return the corresponding indexed node list
     Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
@@ -83,14 +90,16 @@ def take_off(h):
     VeMeth.UAV().takeoff(float(str(h)), UAV)
     heading = UavHeading(UAV.heading)
     default_alt = UAV.location.local_frame.down
+    
     nextStep = plannedPath[0]
     plannedPath.remove(plannedPath[0])
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     
-    isReplanning = False
+    isReplanning = False   
     
     while nodeIdx !=goal_index:
-        
+            
+        #isReplanning = False
         if not isReplanning:
             
             current = nextStep
@@ -99,7 +108,7 @@ def take_off(h):
             nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
             plannedPath.remove(plannedPath[0])
             n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
-            print n, e, d, nodeVel,utilities.sqrt_dist(n, e, d)
+            print n, e, d#, nodeVel,utilities.sqrt_dist(n, e, d)
             #set the appropriate speed at which the UAV should travel through the point
             UAV.airspeed = nodeVel
             #send command with the north, east, down( -z) distance to move on 
@@ -115,20 +124,20 @@ def take_off(h):
         globalPath.append(nextStep)
         
         #sensing the surrounding area with the embedded sensors
-        extendedObs, isDetected, brake = DetectUnexpectedObs('hcsr04', sens.getSensorValues(sensor), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
-        print isDetected, brake, len(extendedObs)
+        extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
+        #print isDetected, brake, len(extendedObs)
         #brake = False
         if brake:#if brake is triggered, we must switch to online process
-            print 'replanning ...'
-            nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sens.getSensorValues(sensor), 'hcsr04')
+            print 'Into ONPS ...'
+            nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sensor.getSensorValues(sensorType), sensor, UAV, default_alt)
             isReplanning = True
-    
+        
         nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     time.sleep(1)
-    Land()
-
+    #Land(UAV)
+    
     return 'ok'
-
+    
 @eel.expose
 def dataLecture():
     
@@ -138,15 +147,15 @@ def dataLecture():
     spd = UAV.airspeed
     head = UAV.heading
     mode = UAV.mode.name
-    theta=sens.getSensorValues(sensor)#, dist = sens.getLidarValues()
+    theta=sensor.getSensorValues(sensorType)#, dist = sens.getLidarValues()
     
     #print theta#, dist
     return location, battery, head, round(alt,1), round(spd,2), mode, theta#, dist
 
 @eel.expose
-def Land():
+def Land(uav):
     print('Landing mode activated ...')
-    VeMeth.UAV.Land(UAV)
+    VeMeth.UAV.Land(uav)
     
 
 @eel.expose
