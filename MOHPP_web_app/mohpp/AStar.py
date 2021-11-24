@@ -64,7 +64,7 @@ class Astar(object):
                     coords = indexToCoordinates(self.Path[i-1].indice,d_)
                     Paths.append(coords)
                     i-=1
-        
+                print 'path by A*',len(Paths)
                 return Paths 
             
             else:

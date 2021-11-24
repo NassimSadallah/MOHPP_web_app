@@ -21,7 +21,7 @@ from math import floor
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
 UAV = None
-start_coordinates, goal_coordinates = [150,70],[50,15]
+start_coordinates, goal_coordinates = [60,96],[105,35]#EastWest/NorthSouth
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
 extendedObs = []
@@ -115,6 +115,7 @@ def take_off(h):
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
             #pause the script for the corresponding travel time
             time.sleep(utilities.sqrt_dist(n, e, d))
+            nex = input('next')
             
         else:
             #we recompute the global path once we bypassed the dynamic threats

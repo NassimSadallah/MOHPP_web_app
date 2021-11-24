@@ -29,11 +29,11 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
         
         if replannedPath !=[] and replannedPath !=None:
             print "replanned ",len(replannedPath), replannedPath
-            coords = replannedPath[0]
-            replannedPath.remove(coords)
-            current = coordinatesToIndex(coords, d_)
+            nextStep = replannedPath[0]
+            replannedPath.remove(nextStep)
+            current = coordinatesToIndex(nextStep, d_)
             nodeVel = nodes[current].v
-            n, e, d = getNorth_East_Down(curCoord, coords, UAV.location.local_frame.down, default_alt)
+            n, e, d = getNorth_East_Down(curCoord, nextStep, UAV.location.local_frame.down, default_alt)
             print n, e, d, nodeVel,sqrt_dist(n, e, d)
             #set the appropriate speed at which the UAV should travel through the point
             UAV.airspeed = nodeVel
@@ -41,9 +41,10 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
             #pause the script for the corresponding travel time
             time.sleep(sqrt_dist(n, e, d))
-
-            onpsPath.append(coords)
+            nex = input('nextONPS')
+            onpsPath.append(nextStep)
             
+            curCoord = nextStep
             extendedObs, is_detected, brake = DetectUnexpectedObs(sensType,sensors, heading, current, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes, d_)
             
@@ -57,6 +58,7 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
                 else:
                     continue
         else:
+            print 'into Astar empty list'
             astar = AStar.Astar(nodes[current], goal, extendedObs, nodes,  mode = 1)
             replannedPath = astar.computePath()
             
@@ -99,7 +101,7 @@ def processONPS(start, goal, heading, extendedObs, is_detected, nodes, d_,sensor
         
         if replannedPath !=[]:
             print 'replanned '
-            coords = replannedPath[0]
+            conextStep replannedPath[0]
             print coords
             curIdx = coordinatesToIndex(coords, d_)
             replannedPath.remove(coords)
