@@ -86,13 +86,17 @@ Plotly.newPlot('plot', data, layout);
 
                 <input class = "but" type="button" onclick="Launch()" value="Launch" ></input>
          	<input id = "tkoff" class = "but" type="button" onclick="takeoff()" value="Take-off"><span> <input id= "valtakoff" type="text" value="0"> m</span></input>
-         	<input id = "lnd" class = "but" type="button" onclick="testLidar()" value="Test"></input>
+         	<input id = "lnd" class = "but" type="button" onclick="stopMOHPP()" value="STOP"></input>
          	<p id = "mod" class= "but" > Mode:<span id="mode" style="color:green"> -- </span></p>
 		<script>
     		     //Connection script
 	              async function connect(){
 	              document.getElementById('cnct').disabled = true;
       		      let value = await eel.connect(document.querySelector('input[name="sensor_type"]:checked').value)();
+		      if (value[7]=='BAD'){
+		          document.getElementById('cnct').disabled = False;
+		          return false
+		      }
 		      console.log(value);
 		      
 		      document.getElementById('cnct').value = "connected";
@@ -147,6 +151,12 @@ Plotly.newPlot('plot', data, layout);
     		      function update(){
     		     
     		      	datalecture();
+    		      }
+    		      
+    		      function stopMOHPP(){
+    		          eel.stopMOHPP();
+    		          this.close()
+    		      
     		      }
     		      
   		 </script>        
