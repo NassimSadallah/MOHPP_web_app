@@ -20,6 +20,7 @@ class Sensors(object):
         if sensor =='lidar':
             self.ser = self.initSensors(sensor)
             self.iterator = 0
+            self.health = ''
             try:
                 self.lidar = RPLidar(self.ser)
                 print(self.lidar.get_health())
@@ -28,7 +29,8 @@ class Sensors(object):
                 #self.getLidarValues(self.lidar)
             except:
             
-                sys.exit('No Lidar - PROCESS ABORTED')
+                print('No Lidar - PROCESS ABORTED')
+                self.health = 'BAD'
             
         elif sensor =='hcsr04':
             self.ser = self.initSensors(sensor)  

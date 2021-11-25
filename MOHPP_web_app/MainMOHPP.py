@@ -10,7 +10,7 @@ Created on Jul 12, 2021
 @author: nassim
 
 '''
-import os,time, eel
+import os,time, eel, sys
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
@@ -46,8 +46,9 @@ def connect(sens):
     
     global UAV, sensorType, sensor
     sensorType = sens
-    print sensorType
-    sensor = Sensors(sensorType)    
+    
+    sensor = Sensors(sensorType)  
+
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
@@ -57,7 +58,7 @@ def connect(sens):
     mode = UAV.mode.name
     armable = UAV.is_armable
     
-    return location, armable, battery, mode, head, alt, round(spd,2)
+    return location, armable, battery, mode, head, alt, round(spd,2),sensor.health
 
 @eel.expose
 def Launch():
@@ -198,6 +199,11 @@ def testLidar(usb):
     run()
 
 #testLidar(sens.ser)
+
+@eel.expose
+def stopMOHPP():
+    return sys.exit(0)
+
 eel.start('index.html', my_options, block = True)
 
 
