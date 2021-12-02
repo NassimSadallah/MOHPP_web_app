@@ -38,7 +38,9 @@ sensorType, sensor = '', None#'lidar'#'lidar'hcsr04
 
 @eel.expose
 def getTVal():
-    return take_off(1)
+    
+    r= dataLecture()
+    return r[6]
 
 
 @eel.expose
@@ -48,7 +50,8 @@ def connect(sens):
     sensorType = sens
     
     sensor = Sensors(sensorType)  
-
+    if sensor.health=='BAD':
+        return 'Bad Signal'
     UAV = VeMeth.UAV().connect_to_vehicle(sitl_connect, 921600)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
@@ -95,6 +98,9 @@ def take_off(h):
     nextStep = plannedPath[0]
     plannedPath.remove(plannedPath[0])
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+    extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
+    
+    return extendedObs
     
     isReplanning = False   
     
@@ -150,7 +156,7 @@ def dataLecture():
     head = UAV.heading
     mode = UAV.mode.name
     theta=sensor.getSensorValues(sensorType)#, dist = sens.getLidarValues()
-    
+    print theta
     #print theta#, dist
     return location, battery, head, round(alt,1), round(spd,2), mode, theta#, dist
 

@@ -23,10 +23,9 @@ class Sensors(object):
             self.health = ''
             try:
                 self.lidar = RPLidar(self.ser)
-                print(self.lidar.get_health())
-                self.iterator=self.lidar.iter_scans(scan_type='normal', max_buf_meas=10000)
-                
-                #self.getLidarValues(self.lidar)
+                #print(self.lidar.get_health())
+                self.iterator=self.lidar.iter_scans(max_buf_meas=10000)#(max_buf_meas=10000)
+             
             except:
             
                 print('No Lidar - PROCESS ABORTED')
@@ -44,12 +43,14 @@ class Sensors(object):
             if 'ttyUSB' in p[0]:
                 port = p
                 ser = None
+                
                 if sen=='hcsr04':
                     ser = serial.Serial(port[0], 9600, timeout=1)
                     ser.flush()
                     
                 elif sen=='lidar':
                     ser = port[0]
+
                     
                 print('USB serial communication activated on port!', port[0])
                 return ser
@@ -64,14 +65,23 @@ class Sensors(object):
     def getSensorValues(self, sensor):
         
         if sensor =='lidar':
-            theta={}
-            scan = next(self.iterator)
+            while True:
+                try:
+                    theta={}                               
+                    scan = next(self.iterator)
+                    for meas in scan:#np.array([meas[1] for meas in scan])
+                        theta[meas[1]] = meas[2]*0.001
+                    print theta        
+                    return theta
+                
+                except:
+                    
+                    self.lidar.stop()
+                    self.lidar.clean_input()
+                    self.lidar.reset()
+                    self.iterator = self.lidar.iter_scans(max_buf_meas=10000)#(max_buf_meas=10000)
+                    continue
 
-            for meas in scan:#np.array([meas[1] for meas in scan])
-                theta[meas[1]] = meas[2]*0.001
-            
-            return theta#, Dist
-        
         elif sensor=='hcsr04':
             
             if self.ser != None:
@@ -87,7 +97,7 @@ class Sensors(object):
                        
                         return sensorsValues    
             else:
-                exit('No serial connection') 
+                exit('No serial connection')     
 
     """    
     def getSensorsValues(self):
