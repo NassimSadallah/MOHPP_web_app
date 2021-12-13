@@ -4,7 +4,6 @@ second, the velocity and the travel time cost are assigned with the Fast Marchin
 (in this version only 8/16 neighbors are considered)
 Third, the gradient descent is used to compute the optimal path
 Finally, we instantiate a vehicle (either within the SITL or on a real drone and command it
- 
 Created on Jul 12, 2021
 
 @author: nassim
