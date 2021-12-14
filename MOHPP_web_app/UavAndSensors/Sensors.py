@@ -32,7 +32,8 @@ class Sensors(object):
                 self.health = 'BAD'
             
         elif sensor =='hcsr04':
-            self.ser = self.initSensors(sensor)  
+            self.ser = self.initSensors(sensor)
+            self.health = ''  
             
     def initSensors(self, sen):#sen for sensor type: hs-rc04 or Lidar
         print('looking for USB communication ...')
@@ -87,7 +88,7 @@ class Sensors(object):
             if self.ser != None:
                 sensorsValues = []
                 while True:
-                    if self.ser.in_waiting >6:
+                    if self.ser.in_waiting >0:
                         line = self.ser.readline().decode('ISO-8859-1').rstrip()
                         splitline = line.split(',')
               
@@ -99,24 +100,6 @@ class Sensors(object):
             else:
                 exit('No serial connection')     
 
-    """    
-    def getSensorsValues(self):
-        
-        if self.ser != None:
-            sensorsValues = []
-            while True:
-                if self.ser.in_waiting >6:
-                    line = self.ser.readline().decode('ISO-8859-1').rstrip()
-                    splitline = line.split(',')
-          
-                    for l in splitline:
-                        
-                        sensorsValues.append(round(int(l)*0.01,2))  
-                        
-                    return sensorsValues    
-        else:
-            exit            
-    """
             
 
                 

@@ -25,9 +25,9 @@ nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
 extendedObs = []
 my_options = {
-    'mode': "chrome-app", #or "chrome-app",
-    'port': 8000
-
+    'mode': "None",
+    'host': '0.0.0.0',
+    'port': 8080,
 }
 
 eel.init('webapp')
