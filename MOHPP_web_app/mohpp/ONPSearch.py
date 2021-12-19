@@ -5,11 +5,13 @@ Created on Jul 8, 2021
 @author: nassim
 '''
 
-from mohpp.utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs,sqrt_dist,getNorth_East_Down
+from mohpp.utilities import indexToCoordinates, coordinatesToIndex, NEW_FORBIDDEN, DetectUnexpectedObs,sqrt_dist,getNorth_East_Down, globalPath
 import AStar
 from UavAndSensors import VehiclesMethods as VeMeth
 import time
 from math import floor
+
+
 
 def ObsInPath(l, nodes, d_):
 
@@ -21,8 +23,9 @@ def ObsInPath(l, nodes, d_):
         
     
 def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors, sensType, UAV, default_alt):
-    
+   
     current,curCoord = start, indexToCoordinates(start, d_)
+    
     replannedPath = []
     onpsPath = []
     while extendedObs !=[]:
@@ -45,6 +48,7 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
             onpsPath.append(nextStep)
             
             curCoord = nextStep
+            globalPath.append(curCoord)
             extendedObs, is_detected, brake = DetectUnexpectedObs(sensType,sensors, heading, current, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes, d_)
             

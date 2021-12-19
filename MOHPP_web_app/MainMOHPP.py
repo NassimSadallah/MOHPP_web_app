@@ -13,7 +13,7 @@ Created on Jul 12, 2021
 import os,time, eel, sys
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading
+from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading, wavePlot, drawTK, globalPath
 from UavAndSensors.Sensors import Sensors
 from math import floor
 
@@ -25,7 +25,7 @@ sensedData = None
 
 start_coordinates, goal_coordinates = [99,75],[20,50]#[60,96],[105,38]#EastWest/NorthSouth
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
-plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
+plannedPath, Nodes, CDM, extendedObs, start_index, goal_index = [],[],[], [], -1,-1
 extendedObs = []
 my_options = {
     'mode': "None",
@@ -69,7 +69,7 @@ def connect(sens):
 @eel.expose
 def Launch():
     
-    global plannedPath, Nodes, goal_index, CDM,globalPath, start_index, extendedObs     
+    global plannedPath, Nodes, goal_index, CDM, start_index, extendedObs     
     alpha = 0.01* int(str(eel.saturation()()))
 
     #reads the binary map from the binarymaps package
@@ -81,8 +81,7 @@ def Launch():
     #gets the corresponding indices of the cells start and goal
     start_index = utilities.coordinatesToIndex(start_coordinates, d_)
     goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
-    
-    globalPath = []
+
     #computes the velocity and the travel time at each node of the map
     CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
     #wavePlot(d_[0], d_[1]/d_[0], CDM)
@@ -92,7 +91,7 @@ def Launch():
 @eel.expose
 def take_off(h):
     
-    global plannedPath, Nodes, goal_index, CDM,globalPath,start_index, extendedObs 
+    global plannedPath, Nodes, goal_index, CDM,start_index, extendedObs 
     
     VeMeth.UAV().takeoff(float(str(h)), UAV)
     heading = UavHeading(UAV.heading)
@@ -102,9 +101,10 @@ def take_off(h):
     plannedPath.remove(plannedPath[0])
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
-    
+    time.sleep(5)
+    Land(UAV)
     #return extendedObs
-    
+    globalPath.append(nextStep)
     isReplanning = False   
     
     while nodeIdx !=goal_index:
@@ -113,11 +113,13 @@ def take_off(h):
         if not isReplanning:
             
             current = nextStep
+            globalPath.append(current)
             nextStep = plannedPath[0]
             nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
             nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
             plannedPath.remove(plannedPath[0])
             n, e, d = utilities.getNorth_East_Down(current, nextStep, UAV.location.local_frame.down, default_alt)
+            
             print n, e, d#, nodeVel,utilities.sqrt_dist(n, e, d)
             #set the appropriate speed at which the UAV should travel through the point
             UAV.airspeed = nodeVel
@@ -130,9 +132,10 @@ def take_off(h):
         else:
             #we recompute the global path once we bypassed the dynamic threats
             current = nextStep
+            globalPath.append(current)
             plannedPath = OFPSearch.Gradient(nodeIdx, goal_index, CDM, d_)
             
-        globalPath.append(nextStep)
+        #globalPath.append(nextStep)
         
         #sensing the surrounding area with the embedded sensors
         extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
@@ -145,6 +148,9 @@ def take_off(h):
         
         nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     time.sleep(1)
+    print globalPath
+    drawTK(Nodes, globalPath)
+    wavePlot(width, height, Nodes, globalPath, Nodes[start_index], Nodes[goal_index])
     #Land(UAV)
     
     return 'ok'

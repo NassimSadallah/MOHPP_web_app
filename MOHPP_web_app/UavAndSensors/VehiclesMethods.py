@@ -26,14 +26,14 @@ class UAV:
         while not vehicle.is_armable:
             print(" Waiting for vehicle initialization...")
             time.sleep(1.5)
-        """
+        
         vehicle.mode = VehicleMode("GUIDED")
         print(' setting UAV mode to GUIDED...')
         while not vehicle.mode =="GUIDED":
             
             vehicle.mode = VehicleMode("GUIDED")
             time.sleep(1)
-        """
+        
     def takeoff(self,height,vehicle):
         '''
         Arming the vehicle, height in meters and vehicle is the instantiated object

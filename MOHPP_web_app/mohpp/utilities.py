@@ -7,7 +7,7 @@ from math import floor, cos, sin, pi, sqrt
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
-
+from Tkinter import *
 risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -16,6 +16,8 @@ FORBIDDEN = 9999999999.0
 NEW_FORBIDDEN = 9999999999.0 
 INFINI=99999999999.0
 width, height = 200, 150
+echelle = 2
+globalPath = []
 d_ = [width, width*height]
 
 def coordinatesToIndex(current_coordinates, d_ = [-1, -1]):
@@ -58,30 +60,37 @@ def getNorth_East_Down(current, nextStep, down, default_altitude):
 def sqrt_dist(a,b,c = 0):
     return sqrt(a**2+b**2+c**2)
 
-def wavePlot(r, r2,nodes):
+def wavePlot(r= -1, r2= -1,nodes = [],path = [], start = [], goal = []):
     zVelocity = [[0 for _ in range(r)] for _ in range(r2)]
     xvec = np.linspace(0.,r,r)
     yvec = np.linspace(0.,r2,r2)                               
     x,y = np.meshgrid(xvec, yvec)
     
     ind = 0
-    cou2 = 0
+    cou2 = r2-1
     
     o = getmaxcost(nodes)    
     
-    while not cou2==r2-1:
+    while not cou2==0:
         for c in range(0,r):
             if nodes[ind].cost >o:
                 nodes[ind].cost = o+10
             zVelocity[cou2][c] = nodes[ind].cost
             ind+=1 
-        cou2+=1                
+        cou2-=1                
     
+    plt.imshow(zVelocity, cmap='Greys',  interpolation='nearest')
     
+    for i in path:
+       
+        i[1] = r2-i[1]    
+        plt.plot(i[0],i[1],'m+')
     
+    plt.plot(start.abscice,r2-start.colonne,'^k:')
+    plt.plot(goal.abscice,r2-goal.colonne,'go')
     plt.contourf(x, y, zVelocity ,200)                             
     plt.colorbar() 
-    plt.imshow(zVelocity, cmap='Greys',  interpolation='nearest')
+    
     plt.show()    
 
 def isEmptyList(l):
@@ -321,5 +330,38 @@ def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs
             
     return extendedObs, isDetected, brake#cartesval#
           
-
-
+def dessiner(noeud,col, grille):
+           
+            grille.create_rectangle(noeud.abscice*echelle,noeud.colonne*echelle,noeud.abscice*echelle+echelle,
+                                        noeud.colonne*echelle+echelle,outline = col,fill=col)
+def dessinerPath(x,y,co, grille, fenetre):
+    
+        grille.create_line(x[0]*echelle,x[1]*echelle,y[0]*echelle,y[1]*echelle,width= 2,fill=co)
+        fenetre.update()    
+   
+def drawTK(Nodes, path = globalPath):
+    fenetre =Tk()
+    fenetre.title("MAP MOPP")
+    grille = Canvas(fenetre,width=width*2,height=height*2,bg='grey')
+    grille.pack()
+    grille.delete(ALL)
+    for i in Nodes:
+        #ffcccb ffd5d3 ffdddc ffe6e5 ffeeed fff6f6 ffffff
+        pourcent = round(i.v,2)*100
+        if pourcent ==0:
+            dessiner(i, 'black', grille)
+        elif pourcent ==1:
+            dessiner(i, 'white', grille)
+        else: 
+            coleur = "grey"+str(int(pourcent))
+            dessiner(i, coleur, grille)
+        if i.OBSTACLE ==UNDETECTED_OBSTACLE:
+            dessiner(i, 'grey', grille)
+    x,y = [],[]
+    for i in path:
+        x.append(i[0])
+        y.append(i[1])
+    dessinerPath(x, y, 'magenta', grille, fenetre)
+    fenetre.update()  
+    fenetre.mainloop()     
+    
