@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
 
-
+risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
 KNOWN_OBSTACLE = 1
@@ -31,11 +31,12 @@ def indexToCoordinates(idx, d_ = [-1, -1]):
     return current_coordinates
 
 def getmaxcost(l):
+    global risks
     m = 0
     for i in l:
         if m < i.cost and not i.cost == INFINI:
             m = i.cost
-        
+    risks = m    
     return m
 
 def getmaxVel(l):
@@ -303,7 +304,7 @@ def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs
             cartesval.append(cartesianS)
             curobs = nodes[coordinatesToIndex(obs, d_)]
                     
-            if curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]:            
+            if (curobs.risk/risks)>=0.95 or curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]:            
                 
                 isDetected = True
                 curobs.OBSTACLE = KNOWN_OBSTACLE

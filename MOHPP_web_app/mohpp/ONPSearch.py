@@ -34,14 +34,14 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
             current = coordinatesToIndex(nextStep, d_)
             nodeVel = nodes[current].v
             n, e, d = getNorth_East_Down(curCoord, nextStep, UAV.location.local_frame.down, default_alt)
-            print n, e, d, nodeVel,sqrt_dist(n, e, d)
+            print n, e, d,sqrt_dist(n, e, d)
             #set the appropriate speed at which the UAV should travel through the point
             UAV.airspeed = nodeVel
             #send command with the north, east, down( -z) distance to move on 
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
             #pause the script for the corresponding travel time
             time.sleep(sqrt_dist(n, e, d))
-            nex = input('nextONPS')
+            #nex = input('nextONPS')
             onpsPath.append(nextStep)
             
             curCoord = nextStep

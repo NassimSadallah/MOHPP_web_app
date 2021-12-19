@@ -19,6 +19,7 @@ class node():# class node
         self.indice = -1
         self.cros = False
         self.TAG = None
+        self.risk = 0
         self.full = 0
         self.hCost = 0
         self.G = 0

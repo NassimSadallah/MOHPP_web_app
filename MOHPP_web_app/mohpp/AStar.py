@@ -75,25 +75,27 @@ class Astar(object):
                     return BaseException
                 
                 for n in neighborList:
-                            
-                    n.G = n.parent.G + sqrt_dist((n.parent.colonne-n.colonne),(n.parent.abscice-n.abscice))
-
-                    n.H =(n.cost)*199.5#+dist_between(n, goal)*99)#*0.3+(dist_between(n, goal)*0.7)
-                    n.F = n.G + n.H
-                    m =InTheList(n,self.closed,0)
-                    if m !=False :  
-                        if n.F < m.F :
-                            self.closed.remove(m)
-                    else:  
-            
-                        m = InTheList(n,self.opened,1) 
-                        if m !=False: 
-                            if n.F < m.F :
+                    if n.TAG == FORBIDDEN or n.TAG == NEW_FORBIDDEN:
+                        continue
+                    else:        
+                        n.G = n.parent.G + sqrt_dist((n.parent.colonne-n.colonne),(n.parent.abscice-n.abscice))
     
-                                self.opened.remove(m)
-                        else:                           
-                                n.parent = self.current
-                                heappush(self.opened, (n.F,n))
+                        n.H =(n.cost)*199.5#+dist_between(n, goal)*99)#*0.3+(dist_between(n, goal)*0.7)
+                        n.F = n.G + n.H
+                        m =InTheList(n,self.closed,0)
+                        if m !=False :  
+                            if n.F < m.F :
+                                self.closed.remove(m)
+                        else:  
+                
+                            m = InTheList(n,self.opened,1) 
+                            if m !=False: 
+                                if n.F < m.F :
+        
+                                    self.opened.remove(m)
+                            else:                           
+                                    n.parent = self.current
+                                    heappush(self.opened, (n.F,n))
 
 
                                             

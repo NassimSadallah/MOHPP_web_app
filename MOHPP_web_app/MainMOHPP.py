@@ -20,7 +20,10 @@ from math import floor
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
 UAV = None
-start_coordinates, goal_coordinates = [60,96],[105,35]#EastWest/NorthSouth
+#global variable to store the sensed data and return it for the need
+sensedData = None
+
+start_coordinates, goal_coordinates = [99,75],[20,50]#[60,96],[105,38]#EastWest/NorthSouth
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM,globalPath, extendedObs, start_index, goal_index = [],[],[],[], [], -1,-1
 extendedObs = []
@@ -59,6 +62,7 @@ def connect(sens):
     head = UAV.heading
     mode = UAV.mode.name
     armable = UAV.is_armable
+    eel.spawn(readData_fork)
     
     return location, armable, battery, mode, head, alt, round(spd,2),sensor.health
 
@@ -69,7 +73,7 @@ def Launch():
     alpha = 0.01* int(str(eel.saturation()()))
 
     #reads the binary map from the binarymaps package
-    binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/Cerist.png")
+    binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
     
     #defines the obstacles and return the corresponding indexed node list
     Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
@@ -99,7 +103,7 @@ def take_off(h):
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
     
-    return extendedObs
+    #return extendedObs
     
     isReplanning = False   
     
@@ -121,7 +125,7 @@ def take_off(h):
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
             #pause the script for the corresponding travel time
             time.sleep(utilities.sqrt_dist(n, e, d))
-            nex = input('next')
+            #nex = input('next')
             
         else:
             #we recompute the global path once we bypassed the dynamic threats
@@ -144,20 +148,26 @@ def take_off(h):
     #Land(UAV)
     
     return 'ok'
-    
+
+def readData_fork():
+    global sensedData, sensor, sensorType
+    sensedData = sensor.getSensorValues(sensorType)
+    #print sensedData
+
 @eel.expose
 def dataLecture():
-    
+    global sensedData
+    eel.spawn(readData_fork)
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
     alt = UAV.location.global_relative_frame.alt
     spd = UAV.airspeed
     head = UAV.heading
     mode = UAV.mode.name
-    theta=sensor.getSensorValues(sensorType)#, dist = sens.getLidarValues()
-    print theta
+    #theta=sensedData#sensor.getSensorValues(sensorType)#, dist = sens.getLidarValues()
+
     #print theta#, dist
-    return location, battery, head, round(alt,1), round(spd,2), mode, theta#, dist
+    return location, battery, head, round(alt,1), round(spd,2), mode, sensedData#theta#, dist
 
 @eel.expose
 def Land(uav):
@@ -208,6 +218,8 @@ def testLidar(usb):
 @eel.expose
 def stopMOHPP():
     return sys.exit(0)
+
+
 
 eel.start('index.html', my_options, block = True)
 

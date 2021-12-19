@@ -23,54 +23,6 @@ function request_values(){
             	
 }
 
-function plotVal(div, value){
-  
-  var data = [];  
-  
-  for (let i = 0; i<value.length;i++){
-      let cur = value[i];
-      console.log(cur)+"note";
-      //if (cur[i]!=0 && cur[i]<10 &&cur[i]>-10){
-      var x = [0,cur[1]*Math.cos(cur[0])];
-      var y = [0,cur[1]*Math.sin(cur[0])];
-      console.log([x,y]);
-      /*}
-      else {
-      var x= [0,0];
-      var y = [0,0];
-      }*/
-      data[data.length] = {x, y, mode:'markers', type:'scatter', marker:{size:6}};
-      //theta -=Math.PI/2; 
-  }
-  /*S
-  var theta = Math.PI/4
-    for (let i = 4; i<8;i++){
-      if (value[i]>0.05 && value[i]<4){
-      var x = [0,value[i]*Math.cos(Math.PI*2 +theta)];
-      var y = [0,value[i]*Math.sin(Math.PI*2 +theta)];
-      }
-      else {
-      var x= [0,0];
-      var y = [0,0];
-      }
-      data[data.length] = {x, y, mode:'markers', type:'scatter', marker:{size:12}};
-      theta -=Math.PI/2; 
-  }
-
-*/
-  var layout = {
-  xaxis: {
-    range: [ -4.00, 4.00 ]
-  },
-  yaxis: {
-    range: [-4.00, 4.00]
-  }
-    };
-
-Plotly.newPlot('plot', data, layout);
-}
-//getVal();
-
 </script>
 
 <link rel="stylesheet" href="css/rendering.css">	
@@ -144,13 +96,13 @@ Plotly.newPlot('plot', data, layout);
     		        document.getElementById('alt').innerHTML = data[3] + " m";
     		        document.getElementById('spd').innerHTML = data[4]+" m/s";
     		        document.getElementById('mode').innerHTML = data[5]
-    		        //console.log(data[6]);
-    		        plotVal('plot', data[6]);
-    		        
-    		        //getVal();
-    		        
-    		        //console.log(data[7])
-    		        
+    		        console.log(data[6]);
+    		        /*if (document.querySelector('input[name="sensor_type"]:checked').value =='lidar'){
+    		            plotValLidar('plot', data[6]);
+    		        }
+    		        else{
+    		            plotValHCSR('plot', data[6], data[2]);
+    		        }*/
     		        update();
     		      }
     		      function update(){
@@ -162,16 +114,59 @@ Plotly.newPlot('plot', data, layout);
     		          eel.stopMOHPP();
 
     		      }
-    		      
-function plotVal(div, value){
+//HCSR-04 plotting 
+function plotValHCSR(div, value, heading){
+  var head = heading*Math.PI/180.0
+  const data = []
+  const nam = ['N','E','S','W','NE','SE','SW','NW']
+  
+  var theta = Math.PI/2 
+  for (let i = 0; i<4;i++){
+      if (value[i]>0.2 && value[i]<4){
+      var x = [0,value[i]*Math.cos(Math.PI*2-head +theta)];
+      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
+      }
+      else {
+      var x= [0,0];
+      var y = [0,0];
+      }
+      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text: nam[i], textposition:'top center', marker:{size:12}};
+      theta -=Math.PI/2; 
+  }
+  var theta = Math.PI/4
+    for (let i = 4; i<8;i++){
+      if (value[i]>0.2 && value[i]<4){
+      var x = [0,value[i]*Math.cos(Math.PI*2 -head+theta)];
+      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
+      }
+      else {
+      var x= [0,0];
+      var y = [0,0];
+      }
+      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text:nam[i],textposition:'top center',marker:{size:12}};
+      theta -=Math.PI/2; 
+  }
+  var layout = {
+  xaxis: {
+    range: [ -4.00, 4.00 ]
+  },
+  yaxis: {
+    range: [-4.00, 4.00]
+  }
+    };
+
+Plotly.newPlot('plot', data, layout);
+}
+//Lidar plotting     		      
+function plotValLidar(div, value){
   
   var data = [];  
 
   obj = Object.entries(value);
-  //console.log(obj)
+  console.log(obj)
   for (let i = 0; i<obj.length;i++){
       let cur = obj[i];
-      console.log([Number.parseFloat(cur[1]),Number.parseFloat(cur[0])]);
+      //console.log([Number.parseFloat(cur[1]),Number.parseFloat(cur[0])]);
       //if (cur[i]!=0 && cur[i]<10 &&cur[i]>-10){
       var x = [0,cur[1]*Math.cos(Math.PI*2+cur[0])];
       var y = [0,cur[1]*Math.sin(Math.PI*2+cur[0])];

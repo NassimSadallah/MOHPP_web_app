@@ -12,7 +12,7 @@ import eel
 
 
 incr = 0    
-
+i = 0
 class Sensors(object):
     
     def __init__(self, sensor = None):
@@ -24,7 +24,7 @@ class Sensors(object):
             try:
                 self.lidar = RPLidar(self.ser)
                 #print(self.lidar.get_health())
-                self.iterator=self.lidar.iter_scans(max_buf_meas=10000)#(max_buf_meas=10000)
+                self.iterator=self.lidar.iter_scans(max_buf_meas=20000)#(max_buf_meas=10000)
              
             except:
             
@@ -63,24 +63,27 @@ class Sensors(object):
     '''
     return the sensed distances: value of sensor is either lidar or hcsr04
     '''
+
     def getSensorValues(self, sensor):
         
         if sensor =='lidar':
+          
             while True:
                 try:
+                    
                     theta={}                               
                     scan = next(self.iterator)
                     for meas in scan:#np.array([meas[1] for meas in scan])
                         theta[meas[1]] = meas[2]*0.001
-                    print theta        
+                         
                     return theta
                 
                 except:
-                    
+                    print 'retry...'
                     self.lidar.stop()
-                    self.lidar.clean_input()
+                    #self.lidar.clean_input()
                     self.lidar.reset()
-                    self.iterator = self.lidar.iter_scans(max_buf_meas=10000)#(max_buf_meas=10000)
+                    self.iterator = self.lidar.iter_scans(max_buf_meas=20000)#(max_buf_meas=10000)
                     continue
 
         elif sensor=='hcsr04':
