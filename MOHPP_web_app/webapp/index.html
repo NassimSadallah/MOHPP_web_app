@@ -38,9 +38,9 @@ function request_values(){
                 <p class="but">safety:<input type="range" id="as" name="a" value="25" min="1" max="99" onchange="document.getElementById ('a').value=this.value;" >
              	  <output type="text" id="a" >25</output></input>%</p> 
 
-                <input class = "but" type="button" onclick="Launch()" value="Launch" ></input>
-         	<input id = "tkoff" class = "but" type="button" onclick="takeoff()" value="Take-off"><span> <input id= "valtakoff" type="text" value="0"> m</span></input>
-         	<input id = "lnd" class = "but" type="button" onclick="stopMOHPP()" value="STOP"></input>
+                <input id="lnch" class = "but" type="button" onclick="Launch()" value="Launch" ></input>
+         	<input id = "tkoff" class = "but" type="button" onclick="takeoff()" value="Take-off"><span> <input id= "valtakoff" type="text" value="1.0"> m</span></input>
+         	<input id = "lnd" class = "but" type="button" onclick="TestMode()" value="TestMODE"></input>
          	<p id = "mod" class= "but" > Mode:<span id="mode" style="color:green"> -- </span></p>
 		<script>
     		     //Connection script
@@ -67,12 +67,16 @@ function request_values(){
              	      datalecture();
              	      
     		      }
+    		      
     		      //launch the MOHPP 
     		      async function Launch(){
     		       //datalecture();
     		       let done = await eel.Launch()();
-    		       //console.log(done);
+    		       if (done =='ok'){
+    		       document.getElementById('lnch').disabled = true;
+    		       }
     		      }
+    		      
     		      //saturation expose to python
     		      eel.expose(saturation);
     		      function saturation(){
@@ -100,9 +104,9 @@ function request_values(){
     		        /*if (document.querySelector('input[name="sensor_type"]:checked').value =='lidar'){
     		            plotValLidar('plot', data[6]);
     		        }
-    		        else{
+    		        else{*/
     		            plotValHCSR('plot', data[6], data[2]);
-    		        }*/
+    		        /*}*/
     		        update();
     		      }
     		      function update(){
@@ -110,83 +114,98 @@ function request_values(){
     		      	datalecture();
     		      }
     		      
-    		      function stopMOHPP(){
-    		          eel.stopMOHPP();
+    		      async function TestMode(){
+    		          await eel.TESTMODE()();
 
     		      }
-//HCSR-04 plotting 
-function plotValHCSR(div, value, heading){
-  var head = heading*Math.PI/180.0
-  const data = []
-  const nam = ['N','E','S','W','NE','SE','SW','NW']
-  
-  var theta = Math.PI/2 
-  for (let i = 0; i<4;i++){
-      if (value[i]>0.2 && value[i]<4){
-      var x = [0,value[i]*Math.cos(Math.PI*2-head +theta)];
-      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
-      }
-      else {
-      var x= [0,0];
-      var y = [0,0];
-      }
-      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text: nam[i], textposition:'top center', marker:{size:12}};
-      theta -=Math.PI/2; 
-  }
-  var theta = Math.PI/4
-    for (let i = 4; i<8;i++){
-      if (value[i]>0.2 && value[i]<4){
-      var x = [0,value[i]*Math.cos(Math.PI*2 -head+theta)];
-      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
-      }
-      else {
-      var x= [0,0];
-      var y = [0,0];
-      }
-      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text:nam[i],textposition:'top center',marker:{size:12}};
-      theta -=Math.PI/2; 
-  }
-  var layout = {
-  xaxis: {
-    range: [ -4.00, 4.00 ]
-  },
-  yaxis: {
-    range: [-4.00, 4.00]
-  }
-    };
+    		      
+				//HCSR-04 plotting 
+				function plotValHCSR(div, value, heading){
+				  var head = heading*Math.PI/180.0
+				  const data = []
+				  const nam = ['N','E','S','W','NE','SE','SW','NW']
+				  
+				  var theta = Math.PI/2 
+				  for (let i = 0; i<4;i++){
+				      if (value[i]>0.2 && value[i]<4){
+				      var x = [0,value[i]*Math.cos(Math.PI*2-head +theta)];
+				      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
+				      }
+				      else {
+				      var x= [0,0];
+				      var y = [0,0];
+				      }
+				      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text: nam[i], textposition:'top center', marker:{size:12}};
+				      theta -=Math.PI/2; 
+				  }
+				  var theta = Math.PI/4
+				    for (let i = 4; i<8;i++){
+				      if (value[i]>0.2 && value[i]<4){
+				      var x = [0,value[i]*Math.cos(Math.PI*2 -head+theta)];
+				      var y = [0,value[i]*Math.sin(Math.PI*2 -head+theta)];
+				      }
+				      else {
+				      var x= [0,0];
+				      var y = [0,0];
+				      }
+				      data[data.length] = {x, y, mode:'markers+text', type:'scatter', text:nam[i],textposition:'top center',marker:{size:12}};
+				      theta -=Math.PI/2; 
+				  }
+				  var layout = {
+				  xaxis: {
+				    range: [ -4.00, 4.00 ]
+				  },
+				  yaxis: {
+				    range: [-4.00, 4.00]
+				  }
+				    };
+				
+				Plotly.newPlot('plot', data, layout);
+				}
+				
+				//Lidar plotting     		      
+				function plotValLidar(div, value){
+				  
+				  var data = [];  
+				
+				  obj = Object.entries(value);
+				  console.log(obj)
+				  for (let i = 0; i<obj.length;i++){
+				      let cur = obj[i];
+				      //console.log([Number.parseFloat(cur[1]),Number.parseFloat(cur[0])]);
+				      //if (cur[i]!=0 && cur[i]<10 &&cur[i]>-10){
+				      var x = [0,cur[1]*Math.cos(Math.PI*2+cur[0])];
+				      var y = [0,cur[1]*Math.sin(Math.PI*2+cur[0])];
+				      
+				
+				      data[data.length] = {x, y, mode:'markers', type:'scatter', marker:{size:6}};
+				  
+				  }
+				
+				  var layout = {
+				  xaxis: {
+				    range: [ -4.00, 4.00 ]
+				  },
+				  yaxis: {
+				    range: [-4.00, 4.00]
+				  }
+				    };
+				
+				Plotly.newPlot('plot', data, layout);
+				}
+				
+				async function stest1(){
+					let T1 = await eel.test1(document.getElementById('valtakoff').value);
+				   
+				
+				}
+				async function stest2(){
+					let T2 = await eel.test2(document.getElementById('valtakoff').value);
+				}
+				async function stest3(){
+					let T3 = await eel.test3(document.getElementById('valtakoff').value);
+				}
 
-Plotly.newPlot('plot', data, layout);
-}
-//Lidar plotting     		      
-function plotValLidar(div, value){
-  
-  var data = [];  
-
-  obj = Object.entries(value);
-  console.log(obj)
-  for (let i = 0; i<obj.length;i++){
-      let cur = obj[i];
-      //console.log([Number.parseFloat(cur[1]),Number.parseFloat(cur[0])]);
-      //if (cur[i]!=0 && cur[i]<10 &&cur[i]>-10){
-      var x = [0,cur[1]*Math.cos(Math.PI*2+cur[0])];
-      var y = [0,cur[1]*Math.sin(Math.PI*2+cur[0])];
-      
-
-      data[data.length] = {x, y, mode:'markers', type:'scatter', marker:{size:6}};
-  
-  }
-
-  var layout = {
-  xaxis: {
-    range: [ -4.00, 4.00 ]
-  },
-  yaxis: {
-    range: [-4.00, 4.00]
-  }
-    };
-
-Plotly.newPlot('plot', data, layout);
-}
   		 </script>        
   		</form> 	
              </div>
@@ -197,7 +216,10 @@ Plotly.newPlot('plot', data, layout);
          
          <section>
              <nav>
-
+                 <input id = "t1" class = "but" type="button" onclick="stest1()" value="UpDown"></input>
+                 <input id = "t2" class = "but" type="button" onclick="stest2()" value="StraightDet"></input>
+                 <input id = "t3" class = "but" type="button" onclick="stest3()" value="FULLTest"></input>
+                 
                  <p>Location:<span id="location" style="color:white"></p>
                  <p> Ready:<span id="arm" style="color:white"></p>
                  <p >Battery:

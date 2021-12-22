@@ -42,13 +42,14 @@ def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors
             UAV.airspeed = nodeVel
             #send command with the north, east, down( -z) distance to move on 
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
+            globalPath.append(nextStep)
             #pause the script for the corresponding travel time
             time.sleep(sqrt_dist(n, e, d))
             #nex = input('nextONPS')
             onpsPath.append(nextStep)
             
             curCoord = nextStep
-            globalPath.append(curCoord)
+            
             extendedObs, is_detected, brake = DetectUnexpectedObs(sensType,sensors, heading, current, nodes, extendedObs, 2, 4, d_)
             crossObsPath = ObsInPath(replannedPath, nodes, d_)
             

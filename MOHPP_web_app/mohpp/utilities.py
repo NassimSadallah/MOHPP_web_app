@@ -3,11 +3,13 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
-from math import floor, cos, sin, pi, sqrt 
+from math import floor, cos, sin, pi, sqrt, log 
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
 from Tkinter import *
+import time
+from autobahn.twisted.util import sleep
 risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
@@ -33,13 +35,20 @@ def indexToCoordinates(idx, d_ = [-1, -1]):
     return current_coordinates
 
 def getmaxcost(l):
-    global risks
+
     m = 0
+    
     for i in l:
         if m < i.cost and not i.cost == INFINI:
-            m = i.cost
-    risks = m    
+            m = i.cost  
     return m
+
+def getRisk(l):
+    global risks    
+    for i in l:
+        if i.cost != INFINI and risks< i.risk:      
+            risks = i.risk
+    return risks 
 
 def getmaxVel(l):
     m = 0
@@ -303,31 +312,40 @@ def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs
             sensorsValues = []  
         
     elif sensType=='lidar':#if lidar is the integrated sensor
-        
-        sensorsValues = sensors.items()
-        cartesval = []
+
+        risks = getRisk(nodes)
+        sensorsValues = sensors.items()        
+        cartesval = set()
+            
         for s in sensorsValues:
             
-            cartesianS = [int(round(int(s[1])*cos(2*pi-UavOrient+degToCartesian(s[0])),0)),-int(round(int(s[1])*sin(2*pi-UavOrient+degToCartesian(s[0])),0))]
-            obs = [cur[0]+cartesianS[0],cur[1]+cartesianS[1]]
-            cartesval.append(cartesianS)
-            curobs = nodes[coordinatesToIndex(obs, d_)]
-                    
-            if (curobs.risk/risks)>=0.95 or curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]:            
+            if s[1]<4.0 and s[1] >=0.50:
                 
-                isDetected = True
-                curobs.OBSTACLE = KNOWN_OBSTACLE
-                curobs.TAG = NEW_FORBIDDEN
-                curobs.cost = INFINI
-                extendedObs.append(curobs)
-                            
-                if s[1]<=safety_margin:
-                   
-                    brake = True
-            
-                #print obs, curobs.indice
+                cartesianS = [int(round(int(s[1])*cos(2*pi-UavOrient+degToCartesian(s[0])),0)),-int(round(int(s[1])*sin(2*pi-UavOrient+degToCartesian(s[0])),0))]
+                obs = (cur[0]+cartesianS[0],cur[1]+cartesianS[1])
+                cartesval.add(obs)
+                
+        for obs in cartesval:        
+                
+                curobs = nodes[coordinatesToIndex(obs, d_)]
 
-            
+                print 'R -',round(risks,2), round(curobs.risk,2),round(curobs.risk/risks,2), curobs.indice       
+                
+                if (curobs.risk/risks)<=0.3 or (curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]):            
+                    
+                    isDetected = True
+                    curobs.OBSTACLE = KNOWN_OBSTACLE
+                    curobs.TAG = NEW_FORBIDDEN
+                    curobs.cost = INFINI
+                    extendedObs.append(curobs)
+                                
+                    if s[1]<=safety_margin:
+                       
+                        brake = True
+                
+                    #print obs, curobs.indice
+
+    #extendedObs = list(set(extendedObs))        
     return extendedObs, isDetected, brake#cartesval#
           
 def dessiner(noeud,col, grille):
@@ -335,9 +353,10 @@ def dessiner(noeud,col, grille):
             grille.create_rectangle(noeud.abscice*echelle,noeud.colonne*echelle,noeud.abscice*echelle+echelle,
                                         noeud.colonne*echelle+echelle,outline = col,fill=col)
 def dessinerPath(x,y,co, grille, fenetre):
-    
-        grille.create_line(x[0]*echelle,x[1]*echelle,y[0]*echelle,y[1]*echelle,width= 2,fill=co)
-        fenetre.update()    
+ 
+            
+            grille.create_line(x[0]*echelle,x[1]*echelle,y[0]*echelle,y[1]*echelle,width= 2,fill=co)
+            fenetre.update()    
    
 def drawTK(Nodes, path = globalPath):
     fenetre =Tk()
@@ -357,11 +376,13 @@ def drawTK(Nodes, path = globalPath):
             dessiner(i, coleur, grille)
         if i.OBSTACLE ==UNDETECTED_OBSTACLE:
             dessiner(i, 'grey', grille)
-    x,y = [],[]
+    x = path[0]
+    path.remove(path[0])
     for i in path:
-        x.append(i[0])
-        y.append(i[1])
-    dessinerPath(x, y, 'magenta', grille, fenetre)
-    fenetre.update()  
+        dessinerPath(x, i, 'magenta', grille, fenetre)
+        dessiner(Nodes[coordinatesToIndex([100,74], d_)], 'green', grille)
+        dessiner(Nodes[coordinatesToIndex([20,50], d_)], 'red', grille)
+        fenetre.update()
+        x= i  
     fenetre.mainloop()     
     

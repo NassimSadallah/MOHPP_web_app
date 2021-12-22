@@ -11,6 +11,7 @@ import time
 from __builtin__ import True
 
 class UAV:
+
     '''
     Methods to interract with the connected UAV
     '''
@@ -21,19 +22,23 @@ class UAV:
             
         return vehicle
     
-    def init_vehicle(self,vehicle):
+    def init_vehicle(self, vehicle):
 
         while not vehicle.is_armable:
             print(" Waiting for vehicle initialization...")
             time.sleep(1.5)
-        
-        vehicle.mode = VehicleMode("GUIDED")
-        print(' setting UAV mode to GUIDED...')
-        while not vehicle.mode =="GUIDED":
+        self._vehicle_mode("GUIDED", vehicle)
+     
+    def _vehicle_mode(self, mode, vehicle):
+        vehicle.mode = VehicleMode(mode)
+        print(' setting UAV mode to',mode,' ...')
+        while not vehicle.mode ==mode:
             
-            vehicle.mode = VehicleMode("GUIDED")
+            vehicle.mode = VehicleMode(mode)
             time.sleep(1)
-        
+    
+    
+       
     def takeoff(self,height,vehicle):
         '''
         Arming the vehicle, height in meters and vehicle is the instantiated object
@@ -56,6 +61,7 @@ class UAV:
         return round(vehicle.location.local_frame.down,5)
     
     def Land(self,vehicle):
+        print('LAND mode ...')
         vehicle.mode = VehicleMode("LAND")
         
     def send_NED_velocity(self,vel_x, vel_y, vel_z,vehicle):    

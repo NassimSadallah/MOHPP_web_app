@@ -6,6 +6,7 @@ Created on Jul 8, 2021
 
 from mohpp import FastMarching
 from utilities import INFINI, getmaxcost, wavePlot
+from math import log10
 
 
 def get_Vel_Cost(nodes, srcObs, Start, Goal, alpha, Velocity, d_, seq = 0, block = 0):
@@ -21,8 +22,9 @@ def get_Vel_Cost(nodes, srcObs, Start, Goal, alpha, Velocity, d_, seq = 0, block
     maxvelocity = maxdistance/1.0
     
     for i in nodes:
-        i.risk = i.cost
         vel = i.cost/maxvalue
+        i.risk = i.cost
+        
         if vel<maxvelocity:
             i.v = (vel/maxvelocity)*Velocity
         else :

@@ -16,6 +16,7 @@ from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading, wavePlot, drawTK, globalPath
 from UavAndSensors.Sensors import Sensors
 from math import floor
+from __builtin__ import False
 
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
@@ -23,7 +24,7 @@ UAV = None
 #global variable to store the sensed data and return it for the need
 sensedData = None
 
-start_coordinates, goal_coordinates = [99,75],[20,50]#[60,96],[105,38]#EastWest/NorthSouth
+start_coordinates, goal_coordinates = [96,72],[20,50]#[60,96],[105,38]#colonne/ligne (East/North)
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM, extendedObs, start_index, goal_index = [],[],[], [], -1,-1
 extendedObs = []
@@ -81,11 +82,14 @@ def Launch():
     #gets the corresponding indices of the cells start and goal
     start_index = utilities.coordinatesToIndex(start_coordinates, d_)
     goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
+    print utilities.indexToCoordinates(start_index, d_),utilities.indexToCoordinates(goal_index, d_)
+
 
     #computes the velocity and the travel time at each node of the map
     CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
     #wavePlot(d_[0], d_[1]/d_[0], CDM)
     plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
+    #drawTK(Nodes, [start_coordinates,goal_coordinates])
     return 'Done !'
 
 @eel.expose
@@ -100,10 +104,12 @@ def take_off(h):
     nextStep = plannedPath[0]
     plannedPath.remove(plannedPath[0])
     nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
+
     extendedObs, isDetected, brake = DetectUnexpectedObs(sensorType, sensor.getSensorValues(sensorType), UAV.heading, nodeIdx, Nodes, extendedObs, 1.5, 4, d_)
-    time.sleep(5)
-    Land(UAV)
-    #return extendedObs
+
+    #Land(UAV)
+    
+    #lkj = input("ok next test : ")#extendedObs
     globalPath.append(nextStep)
     isReplanning = False   
     
@@ -113,7 +119,7 @@ def take_off(h):
         if not isReplanning:
             
             current = nextStep
-            globalPath.append(current)
+            
             nextStep = plannedPath[0]
             nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
             nodeVel = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].v
@@ -125,6 +131,7 @@ def take_off(h):
             UAV.airspeed = nodeVel
             #send command with the north, east, down( -z) distance to move on 
             VeMeth.UAV().send_NED_velocity(n, e,d, UAV)
+            globalPath.append(nextStep)
             #pause the script for the corresponding travel time
             time.sleep(utilities.sqrt_dist(n, e, d))
             #nex = input('next')
@@ -132,7 +139,7 @@ def take_off(h):
         else:
             #we recompute the global path once we bypassed the dynamic threats
             current = nextStep
-            globalPath.append(current)
+            globalPath.append(nextStep)
             plannedPath = OFPSearch.Gradient(nodeIdx, goal_index, CDM, d_)
             
         #globalPath.append(nextStep)
@@ -148,9 +155,9 @@ def take_off(h):
         
         nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice
     time.sleep(1)
-    print globalPath
+    #print globalPath
     drawTK(Nodes, globalPath)
-    wavePlot(width, height, Nodes, globalPath, Nodes[start_index], Nodes[goal_index])
+    #wavePlot(width, height, Nodes, globalPath, Nodes[start_index], Nodes[goal_index])
     #Land(UAV)
     
     return 'ok'
@@ -159,11 +166,14 @@ def readData_fork():
     global sensedData, sensor, sensorType
     sensedData = sensor.getSensorValues(sensorType)
     #print sensedData
-
+first = True
 @eel.expose
 def dataLecture():
-    global sensedData
-    eel.spawn(readData_fork)
+    global sensedData, first
+    
+    if first:
+        eel.spawn(readData_fork)
+        first = False
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
     alt = UAV.location.global_relative_frame.alt
@@ -180,6 +190,23 @@ def Land(uav):
     print('Landing mode activated ...')
     VeMeth.UAV.Land(uav)
     
+
+@eel.expose
+def test1(h):
+    global plannedPath, Nodes, goal_index, CDM,start_index, extendedObs 
+    
+    VeMeth.UAV().takeoff(float(str(h)), UAV)
+    print('alt at ',UAV.location.local_frame.down )
+    time.sleep(5)
+    Land(UAV) 
+    return 'ok'   
+@eel.expose
+def test2(h):
+    global start_coordinates, goal_coordinates
+    start_coordinates, goal_coordinates = [100,75],[100,70]#[60,96],[105,38]#colonne/ligne (East/North)
+    Launch()
+    take_off(h)
+    return 'ok'
 
 @eel.expose
 def testLidar(usb):
@@ -220,6 +247,13 @@ def testLidar(usb):
     run()
 
 #testLidar(sens.ser)
+
+@eel.expose
+def TESTMODE():
+    global UAV
+    MODE = ['LAND','STABILIZE','GUIDED']
+    for mode in MODE:
+        VeMeth.UAV()._vehicle_mode(mode, UAV)
 
 @eel.expose
 def stopMOHPP():
