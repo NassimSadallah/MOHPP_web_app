@@ -22,7 +22,7 @@ sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
 UAV = None
 #global variable to store the sensed data and return it for the need
-sensedData = None
+sensedData = {}
 
 start_coordinates, goal_coordinates = [96,72],[20,50]#[60,96],[105,38]#colonne/ligne (East/North)
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
@@ -164,16 +164,16 @@ def take_off(h):
 
 def readData_fork():
     global sensedData, sensor, sensorType
+    sensedData ={}
     sensedData = sensor.getSensorValues(sensorType)
     #print sensedData
 first = True
 @eel.expose
 def dataLecture():
-    global sensedData, first
-    
-    if first:
-        eel.spawn(readData_fork)
-        first = False
+    global sensedData, first, sensor, sensorType
+
+    sensedData ={}
+    sensedData = sensor.getSensorValues(sensorType)  
     location = [UAV.location.global_frame.lat, UAV.location.global_frame.lon] 
     battery = UAV.battery.level
     alt = UAV.location.global_relative_frame.alt

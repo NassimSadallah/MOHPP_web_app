@@ -19,13 +19,13 @@ class Sensors(object):
         
         if sensor =='lidar':
             self.ser = self.initSensors(sensor)
-            self.iterator = 0
+            self.iterator = None
             self.health = ''
             try:
-                self.lidar = RPLidar(self.ser)
+                self.lidar = RPLidar(self.ser,baudrate=115200, timeout=2)
                 #print(self.lidar.get_health())
                 self.iterator=self.lidar.iter_scans(max_buf_meas=20000)#(max_buf_meas=10000)
-             
+                print 'Lidar Detected !'
             except:
             
                 print('No Lidar - PROCESS ABORTED')
@@ -65,23 +65,21 @@ class Sensors(object):
     '''
 
     def getSensorValues(self, sensor):
-        
+        theta={} 
         if sensor =='lidar':
           
             while True:
                 try:
-                    
-                    theta={}                               
+                                                  
                     scan = next(self.iterator)
-                    for meas in scan:#np.array([meas[1] for meas in scan])
-                        theta[meas[1]] = meas[2]*0.001
-                         
+                    for i,meas in enumerate(scan):#np.array([meas[1] for meas in scan])
+                        theta[round(meas[1],3)] = round(meas[2]*0.001,3)
+                    print theta     
                     return theta
                 
                 except:
                     print 'retry...'
                     self.lidar.stop()
-                    #self.lidar.clean_input()
                     self.lidar.reset()
                     self.iterator = self.lidar.iter_scans(max_buf_meas=20000)#(max_buf_meas=10000)
                     continue
@@ -89,17 +87,17 @@ class Sensors(object):
         elif sensor=='hcsr04':
             
             if self.ser != None:
-                sensorsValues = []
+                #sensorsValues = []
                 while True:
                     if self.ser.in_waiting >0:
                         line = self.ser.readline().decode('ISO-8859-1').rstrip()
                         splitline = line.split(',')
               
-                        for l in splitline:
-                            
-                            sensorsValues.append(round(int(l)*0.01,2))  
+                        for i,l in enumerate(splitline):
+                            theta[i] = round(int(l)*0.01,2)
+                            #sensorsValues.append(round(int(l)*0.01,2))  
                        
-                        return sensorsValues    
+                        return theta    
             else:
                 exit('No serial connection')     
 

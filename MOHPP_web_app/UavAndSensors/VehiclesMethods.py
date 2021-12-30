@@ -27,7 +27,6 @@ class UAV:
         while not vehicle.is_armable:
             print(" Waiting for vehicle initialization...")
             time.sleep(1.5)
-        self._vehicle_mode("GUIDED", vehicle)
      
     def _vehicle_mode(self, mode, vehicle):
         vehicle.mode = VehicleMode(mode)
