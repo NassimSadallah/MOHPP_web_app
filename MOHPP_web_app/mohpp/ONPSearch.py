@@ -22,7 +22,7 @@ def ObsInPath(l, nodes, d_):
     return False
         
     
-def processONPS(start, goal, heading,extendedObs, is_detected, nodes, d_,sensors, sensType, UAV, default_alt):
+def processONPS(start, goal, heading,extendedObs, is_detected,brake, nodes, d_,sensors, sensType, UAV, default_alt):
    
     current,curCoord = start, indexToCoordinates(start, d_)
     

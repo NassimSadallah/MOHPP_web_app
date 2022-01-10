@@ -3,6 +3,7 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
+from utilities import FAR, INFINI
 class node():# class node
     def __init__(self,x,y):
         
@@ -12,8 +13,8 @@ class node():# class node
         self.lat = None
         self.OBSTACLE = 0
         
-        self.cost = 99999999999.0
-        self.type ='F'
+        self.cost = INFINI
+        self.type =FAR
         self.v = 1.0
         self.block = 0 # the containing block
         self.indice = -1
@@ -38,8 +39,8 @@ class node3():
         self.lat = None
         self.TAG = None
         self.OBSTACLE = 0
-        self.cost = 99999999999.0
-        self.type ='F'
+        self.cost = -1.0
+        self.type =FAR
         self.v = 1.0
         self.block = 0 # the containing block
         self.indice = -1

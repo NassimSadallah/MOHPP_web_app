@@ -3,7 +3,7 @@ Created on Jul 8, 2021
 
 @author: nassim
 '''
-from math import floor, cos, sin, pi, sqrt, log 
+from math import floor, cos, sin, pi, sqrt, log10
 import numpy as np
 import matplotlib.pyplot as plt
 from heapq import heappop
@@ -14,11 +14,12 @@ risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
 KNOWN_OBSTACLE = 1
-FORBIDDEN = 9999999999.0 
-NEW_FORBIDDEN = 9999999999.0 
-INFINI=99999999999.0
+FORBIDDEN = -1 
+NEW_FORBIDDEN = -2 
+INFINI=9999999.0
 width, height = 200, 150
 echelle = 2
+FAR, KNOWN, FROZEN = -1,0,1
 globalPath = []
 d_ = [width, width*height]
 
@@ -37,9 +38,8 @@ def indexToCoordinates(idx, d_ = [-1, -1]):
 def getmaxcost(l):
 
     m = 0
-    
     for i in l:
-        if m < i.cost and not i.cost == INFINI:
+        if m < i.cost and i.cost < INFINI:
             m = i.cost  
     return m
 
@@ -329,9 +329,9 @@ def DetectUnexpectedObs(sensType, sensors, UavOrient, curIdx, nodes, extendedObs
                 
                 curobs = nodes[coordinatesToIndex(obs, d_)]
 
-                print 'R -',round(risks,2), round(curobs.risk,2),round(curobs.risk/risks,2), curobs.indice       
+                       
                 
-                if (curobs.risk/risks)<=0.3 or (curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]):            
+                if (curobs.OBSTACLE != KNOWN_OBSTACLE and curobs.TAG != FORBIDDEN and cartesianS !=[0,0]):            
                     
                     isDetected = True
                     curobs.OBSTACLE = KNOWN_OBSTACLE
@@ -376,13 +376,14 @@ def drawTK(Nodes, path = globalPath):
             dessiner(i, coleur, grille)
         if i.OBSTACLE ==UNDETECTED_OBSTACLE:
             dessiner(i, 'grey', grille)
-    x = path[0]
-    path.remove(path[0])
-    for i in path:
-        dessinerPath(x, i, 'magenta', grille, fenetre)
-        dessiner(Nodes[coordinatesToIndex([100,74], d_)], 'green', grille)
-        dessiner(Nodes[coordinatesToIndex([20,50], d_)], 'red', grille)
-        fenetre.update()
-        x= i  
+    if path !=[]:
+        x = path[0]
+        path.remove(path[0])
+        for i in path:
+            dessinerPath(x, i, 'magenta', grille, fenetre)
+            dessiner(Nodes[coordinatesToIndex([100,74], d_)], 'green', grille)
+            dessiner(Nodes[coordinatesToIndex([20,50], d_)], 'red', grille)
+            fenetre.update()
+            x= i  
     fenetre.mainloop()     
     

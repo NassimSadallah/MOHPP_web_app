@@ -8,7 +8,7 @@ from dronekit import connect, VehicleMode#, LocationGlobal, LocationGlobalRelati
 from pymavlink import mavutil
 #import os
 import time
-from __builtin__ import True
+
 
 class UAV:
 

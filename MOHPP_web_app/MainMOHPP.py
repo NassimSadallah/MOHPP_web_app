@@ -16,7 +16,7 @@ from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading, wavePlot, drawTK, globalPath
 from UavAndSensors.Sensors import Sensors
 from math import floor
-from __builtin__ import False
+
 
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
@@ -24,7 +24,7 @@ UAV = None
 #global variable to store the sensed data and return it for the need
 sensedData = {}
 
-start_coordinates, goal_coordinates = [96,72],[20,50]#[60,96],[105,38]#colonne/ligne (East/North)
+start_coordinates, goal_coordinates = [96,70],[20,50]#[60,96],[105,38]#colonne/ligne (East/North)
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM, extendedObs, start_index, goal_index = [],[],[], [], -1,-1
 extendedObs = []
@@ -82,8 +82,7 @@ def Launch():
     #gets the corresponding indices of the cells start and goal
     start_index = utilities.coordinatesToIndex(start_coordinates, d_)
     goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
-    print utilities.indexToCoordinates(start_index, d_),utilities.indexToCoordinates(goal_index, d_)
-
+    #print utilities.indexToCoordinates(start_index, d_),utilities.indexToCoordinates(goal_index, d_)
 
     #computes the velocity and the travel time at each node of the map
     CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
@@ -150,7 +149,7 @@ def take_off(h):
         #brake = False
         if brake:#if brake is triggered, we must switch to online process
             print 'Into ONPS ...'
-            nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected, Nodes, d_, sensor.getSensorValues(sensorType), sensor, UAV, default_alt)
+            nextStep = ONPSearch.processONPS(nodeIdx, goal_index, heading,extendedObs, isDetected,brake, Nodes, d_, sensor.getSensorValues(sensorType), sensor, UAV, default_alt)
             isReplanning = True
         
         nodeIdx = Nodes[utilities.coordinatesToIndex([int(floor(nextStep[0])),int(floor(nextStep[1]))], d_)].indice

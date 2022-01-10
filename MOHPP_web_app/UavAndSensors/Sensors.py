@@ -74,7 +74,7 @@ class Sensors(object):
                     scan = next(self.iterator)
                     for i,meas in enumerate(scan):#np.array([meas[1] for meas in scan])
                         theta[round(meas[1],3)] = round(meas[2]*0.001,3)
-                    print theta     
+                    #print theta     
                     return theta
                 
                 except:

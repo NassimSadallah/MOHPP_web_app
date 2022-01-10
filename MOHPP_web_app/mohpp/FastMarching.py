@@ -8,7 +8,7 @@ from __builtin__ import False
 import time
 from math import floor, sqrt
 from heapq import _siftdown, heappop, heappush
-from utilities import isEmptyList, locateBestIdx, FORBIDDEN, INFINI, NEW_FORBIDDEN
+from utilities import isEmptyList, locateBestIdx, FORBIDDEN, INFINI, NEW_FORBIDDEN, KNOWN, FROZEN
 from mohpp.utilities import sqrt_dist
 
 
@@ -309,19 +309,18 @@ class fmm(object):
         
         for i in self.start_points:
             self.nodesList[i].cost = 0
-            heappush(self.narrowBand, (self.nodesList[i].cost, i))
-        
+            heappush(self.narrowBand, (0, i))
+       
         '''
         main loop over the node list
         '''
         initime = time.time()
         while self.narrowBand !=[] and not self.stopWave:
-
             itera+=1
             best = heappop(self.narrowBand)
             idxMin = best[1]
-            neighbors = self.getneighbors(idxMin)
-            self.nodesList[idxMin].type = 'A'
+            neighbors = getneighbors(self,idxMin)
+            self.nodesList[idxMin].type = FROZEN
             
             for j in neighbors:
                 
@@ -330,10 +329,11 @@ class fmm(object):
                  
                 current = self.nodesList[j]
              
-                if current.type == 'A' or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                    
                     continue 
                
-                cost = self.SolveEikonal(j, current.cros)
+                cost = SolveEikonal(self,j, current.cros)
                 
                 if self.narrowBand.__contains__((current.cost,j)):
                     
@@ -343,7 +343,7 @@ class fmm(object):
                         _siftdown(self.narrowBand,0,indexe)
                 else:            
                     current.cost = cost
-                    current.type = 'N'
+                    current.type = KNOWN
                     heappush(self.narrowBand,(cost,j))
         
             if idxMin == self.goal:
@@ -371,7 +371,7 @@ class fmm(object):
             best = locateBestIdx(blk_nodes)
             idxMin = best[1]
             neighbors = getneighbors(self, idxMin)
-            self.nodesList[idxMin].type = 'A'
+            self.nodesList[idxMin].type = FROZEN
             
             for j in neighbors:
                 
@@ -380,7 +380,7 @@ class fmm(object):
                  
                 current = self.nodesList[j]
              
-                if current.type == 'A' or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
                     continue 
                
                 cost = SolveEikonal(self, j, current.cros)
@@ -393,7 +393,7 @@ class fmm(object):
                         _siftdown(blk_nodes[current.block - 1],0,indexe)            
                 else:            
                     current.cost = cost
-                    current.type = 'N'
+                    current.type = KNOWN
                     heappush(blk_nodes[current.block - 1],(cost,j))
             
             EmptyList = isEmptyList(blk_nodes)
@@ -440,7 +440,6 @@ class heuristicFMM(object):
         '''
         initialization of the starting nodes
         '''      
-        
         for i in self.start_points:
             self.nodesList[i].cost = 0
             self.nodesList[i].hCost = sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
@@ -459,7 +458,7 @@ class heuristicFMM(object):
             best = heappop(self.narrowBand)
             idxMin = best[1]
             neighbors = getneighbors(self, idxMin)
-            self.nodesList[idxMin].type = 'A'
+            self.nodesList[idxMin].type = FROZEN
             
             for j in neighbors:
                 
@@ -468,7 +467,7 @@ class heuristicFMM(object):
                  
                 current = self.nodesList[j]
              
-                if current.type == 'A' or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
                     continue 
                
                 cost = SolveEikonal(self, j, current.cros)
@@ -489,7 +488,7 @@ class heuristicFMM(object):
                     current.cost = cost
                     current.hCost = hcost
                     current.full = fcost                    
-                    current.type = 'N'
+                    current.type = KNOWN
                     heappush(self.narrowBand,(fcost,j))
         
             if idxMin == self.goal:
@@ -522,7 +521,7 @@ class heuristicFMM(object):
             best = locateBestIdx(blk_nodes)
             idxMin = best[1]
             neighbors = getneighbors(self, idxMin)
-            self.nodesList[idxMin].type = 'A'
+            self.nodesList[idxMin].type = FROZEN
             
             for j in neighbors:
                 
@@ -531,7 +530,7 @@ class heuristicFMM(object):
                  
                 current = self.nodesList[j]
              
-                if current.type == 'A' or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
+                if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
                     continue 
                
                 cost = SolveEikonal(self, j, current.cros)
@@ -551,7 +550,7 @@ class heuristicFMM(object):
                     current.cost = cost
                     current.hCost = hcost
                     current.full = fcost                     
-                    current.type = 'N'
+                    current.type = KNOWN
                     heappush(blk_nodes[current.block - 1],(fcost,j))
             
             EmptyList = isEmptyList(blk_nodes)
@@ -1214,7 +1213,7 @@ class fmm3D(object):
             n_neighs_cross3 = getneighbors(idxMin,neighbors_cross3,3)
             n_neighs_cross4 = getneighbors(idxMin,neighbors_cross4,3)
             
-            self.nodesList[idxMin].type ='A'
+            self.nodesList[idxMin].type =FROZEN
             
            
             #1
@@ -1222,7 +1221,7 @@ class fmm3D(object):
                 
                 j = neighbors[s]
                 curMN = self.nodesList[j]
-                if  (j==-1 or curMN.type =='A'  or curMN.TAG==FORBIDDEN or curMN.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or curMN.type ==FROZEN  or curMN.TAG==FORBIDDEN or curMN.TAG==NEW_FORBIDDEN):
                     
                     continue
                 
@@ -1241,7 +1240,7 @@ class fmm3D(object):
                     else:
                         
                         curMN.cost = cost
-                        curMN.type = 'N'
+                        curMN.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'cur ',curMN.type,' ',curMN.cost,' pos',curMN.x,curMN.y,curMN.z,'  Obst',curMN.OBSTACLE 
@@ -1251,7 +1250,7 @@ class fmm3D(object):
                 j = neighbors_cross[s]
                 ccur = self.nodesList[j]
                      
-                if  (j==-1 or ccur.type =='A'  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or ccur.type ==FROZEN  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
                 
                     continue
                 
@@ -1269,7 +1268,7 @@ class fmm3D(object):
                     else:
                        
                         ccur.cost = cost
-                        ccur.type = 'N'
+                        ccur.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'ccur ',ccur.type,' ',ccur.cost,' pos',ccur.x,ccur.y,ccur.z,'  Obst',ccur.OBSTACLE 
@@ -1279,7 +1278,7 @@ class fmm3D(object):
                 j = neighbors_cross1[s]
                 ccur = self.nodesList[j]
                      
-                if  (j==-1 or ccur.type =='A'  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or ccur.type ==FROZEN  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
                 
                     continue
                 
@@ -1297,7 +1296,7 @@ class fmm3D(object):
                     else:
                        
                         ccur.cost = cost
-                        ccur.type = 'N'
+                        ccur.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'ccur ',ccur.type,' ',ccur.cost,' pos',ccur.x,ccur.y,ccur.z,'  Obst',ccur.OBSTACLE 
@@ -1307,7 +1306,7 @@ class fmm3D(object):
                 j = neighbors_cross2[s]
                 ccur = self.nodesList[j]
                      
-                if  (j==-1 or ccur.type =='A'  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or ccur.type ==FROZEN  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
                 
                     continue
                 
@@ -1325,7 +1324,7 @@ class fmm3D(object):
                     else:
                        
                         ccur.cost = cost
-                        ccur.type = 'N'
+                        ccur.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'ccur ',ccur.type,' ',ccur.cost,' pos',ccur.x,ccur.y,ccur.z,'  Obst',ccur.OBSTACLE 
@@ -1335,7 +1334,7 @@ class fmm3D(object):
                 j = neighbors_cross3[s]
                 ccur = self.nodesList[j]
                      
-                if  (j==-1 or ccur.type =='A'  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or ccur.type ==FROZEN  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
                 
                     continue
                 
@@ -1353,7 +1352,7 @@ class fmm3D(object):
                     else:
                        
                         ccur.cost = cost
-                        ccur.type = 'N'
+                        ccur.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'ccur ',ccur.type,' ',ccur.cost,' pos',ccur.x,ccur.y,ccur.z,'  Obst',ccur.OBSTACLE 
@@ -1364,7 +1363,7 @@ class fmm3D(object):
                 j = neighbors_cross4[s]
                 ccur = self.nodesList[j]
                      
-                if  (j==-1 or ccur.type =='A'  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
+                if  (j==-1 or ccur.type ==FROZEN  or ccur.TAG==FORBIDDEN or ccur.TAG==NEW_FORBIDDEN):
                 
                     continue
                 
@@ -1382,7 +1381,7 @@ class fmm3D(object):
                     else:
                        
                         ccur.cost = cost
-                        ccur.type = 'N'
+                        ccur.type = KNOWN
                         heappush(self.NarrowBand,(cost,j))
                 
                 #print 'ccur ',ccur.type,' ',ccur.cost,' pos',ccur.x,ccur.y,ccur.z,'  Obst',ccur.OBSTACLE 
