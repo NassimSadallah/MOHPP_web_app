@@ -9,6 +9,7 @@ from utilities import INFINI, getmaxcost, FAR
 import numpy as np
 
 def get_Vel_Cost(nodes, srcObs, Start, Goal, alpha, Velocity, d_, seq = 0, block = 0):
+    x_nodes = np.asarray(nodes)
     print '--> Velocity map...'
     vmap = FastMarching.fmm(srcObs, -1 , nodes, d_, cross =False, seq = 1, block = block)
     #vmap.processFMM()

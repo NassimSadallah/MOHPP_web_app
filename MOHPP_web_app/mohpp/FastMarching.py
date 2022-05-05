@@ -441,12 +441,12 @@ class heuristicFMM(object):
         initialization of the starting nodes
         '''      
         for i in self.start_points:
-            self.nodesList[i].cost = 0
-            self.nodesList[i].hCost = sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
-                                            (self.nodesList[i].colonne-self.nodesList[self.goal].colonne))
-            self.nodesList[i].full =self.nodesList[i].cost + (self.nodesList[i].hCost/self.nodesList[i].v -
-                                                          self.nodesList[i].hCost/1.0) #1.0 is the max VELOCITY            
-            heappush(self.narrowBand, (self.nodesList[i].full, i))
+            self.nodesList[i].cost = 0+sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
+                                                 (self.nodesList[i].colonne-self.nodesList[self.goal].colonne))/self.nodesList[i].v 
+            
+            #self.nodesList[i].full =self.nodesList[i].cost + (self.nodesList[i].hCost/self.nodesList[i].v -
+            #                                              self.nodesList[i].hCost/1.0) #1.0 is the max VELOCITY            
+            heappush(self.narrowBand, (self.nodesList[i].cost, i))
         
         '''
         main loop over the node list
@@ -470,29 +470,31 @@ class heuristicFMM(object):
                 if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
                     continue 
                
-                cost = SolveEikonal(self, j, current.cros)
+                cost = SolveEikonal(self, j, current.cros)+sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
+                                            (current.colonne-self.nodesList[self.goal].colonne))/current.v
                 
-                hcost = sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
-                                            (current.colonne-self.nodesList[self.goal].colonne))
-                fcost = cost + (hcost/current.v - hcost/1.0) #1.0 is the max VELOCITY 
+                #hcost = sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
+                #                            (current.colonne-self.nodesList[self.goal].colonne))/current.v
+                #fcost = cost + (hcost/current.v - hcost/1.0) #1.0 is the max VELOCITY 
                 
-                if self.narrowBand.__contains__((current.full,j)):
+                if self.narrowBand.__contains__((current.cost,j)):
                     
-                    if fcost<current.full:
+                    if cost<current.cost:
                         indexe = self.narrowBand.index((current.full,j))
                         current.cost = cost
-                        current.hCost = hcost
-                        current.full = fcost 
+                        #current.hCost = hcost
+                        #current.full = fcost 
                         _siftdown(self.narrowBand,0,indexe)
                 else:            
                     current.cost = cost
-                    current.hCost = hcost
-                    current.full = fcost                    
+                    #current.hCost = hcost
+                    #current.full = fcost                    
                     current.type = KNOWN
-                    heappush(self.narrowBand,(fcost,j))
+                    heappush(self.narrowBand,(cost,j))
         
             if idxMin == self.goal:
-                self.stopWave = True                    
+                self.stopWave = True         
+                           
         print 'seq 0:',time.time()-initime,'seconds '    
         return self.nodesList    
     
@@ -504,13 +506,14 @@ class heuristicFMM(object):
         '''      
         
         for i in self.start_points:
-            self.nodesList[i].cost = 0
-            self.nodesList[i].hCost = sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
-                                            (self.nodesList[i].colonne-self.nodesList[self.goal].colonne))
-            self.nodesList[i].full =self.nodesList[i].cost + (self.nodesList[i].hCost/self.nodesList[i].v -
-                                                          self.nodesList[i].hCost/1.0) #1.0 is the max VELOCITY
+            self.nodesList[i].cost = 0+sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
+                                            (self.nodesList[i].colonne-self.nodesList[self.goal].colonne))/self.nodesList[i].v 
+            #self.nodesList[i].hCost = sqrt_dist((self.nodesList[i].abscice-self.nodesList[self.goal].abscice),
+            #                                (self.nodesList[i].colonne-self.nodesList[self.goal].colonne))
+            #self.nodesList[i].full =self.nodesList[i].cost + (self.nodesList[i].hCost/self.nodesList[i].v -
+            #                                              self.nodesList[i].hCost/1.0) #1.0 is the max VELOCITY
                
-            heappush(blk_nodes[self.nodesList[i].block - 1], (self.nodesList[i].full, i))
+            heappush(blk_nodes[self.nodesList[i].block - 1], (self.nodesList[i].cost, i))
         EmptyList = isEmptyList(blk_nodes)
         '''
         main loop over the node list
@@ -533,25 +536,26 @@ class heuristicFMM(object):
                 if current.type == FROZEN or current.TAG ==FORBIDDEN or current.TAG == NEW_FORBIDDEN:
                     continue 
                
-                cost = SolveEikonal(self, j, current.cros)
-                hcost = sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
-                                            (current.colonne-self.nodesList[self.goal].colonne))
-                fcost = cost + (hcost/current.v - hcost/1.0) #1.0 is the max VELOCITY                 
+                cost = SolveEikonal(self, j, current.cros)+sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
+                                            (current.colonne-self.nodesList[self.goal].colonne))/current.v
+                #hcost = sqrt_dist((current.abscice-self.nodesList[self.goal].abscice),
+                #                            (current.colonne-self.nodesList[self.goal].colonne))
+                #fcost = cost + (hcost/current.v - hcost/1.0) #1.0 is the max VELOCITY                 
                 
-                if blk_nodes[current.block - 1].__contains__((current.full,j)):
+                if blk_nodes[current.block - 1].__contains__((current.cost,j)):
                     
                     if cost<current.cost:
-                        indexe = blk_nodes[current.block - 1].index((current.full,j))
+                        indexe = blk_nodes[current.block - 1].index((current.cost,j))
                         current.cost = cost 
-                        current.hCost = hcost
-                        current.full = fcost                         
+                        #current.hCost = hcost
+                        #current.full = fcost                         
                         _siftdown(blk_nodes[current.block - 1],0,indexe)            
                 else:            
                     current.cost = cost
-                    current.hCost = hcost
-                    current.full = fcost                     
+                    #current.hCost = hcost
+                    #current.full = fcost                     
                     current.type = KNOWN
-                    heappush(blk_nodes[current.block - 1],(fcost,j))
+                    heappush(blk_nodes[current.block - 1],(cost,j))
             
             EmptyList = isEmptyList(blk_nodes)
             
@@ -1090,7 +1094,6 @@ class fmm3D(object):
         
         return updatedT
             
-
     def SolveEikonalcross2(self, idx):
         
         global Tvalues       

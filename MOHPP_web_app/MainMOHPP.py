@@ -16,7 +16,7 @@ from UavAndSensors import VehiclesMethods as VeMeth
 from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading, wavePlot, drawTK, globalPath
 from UavAndSensors.Sensors import Sensors
 from math import floor
-
+import numpy as np
 
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
@@ -78,6 +78,12 @@ def Launch():
     
     #defines the obstacles and return the corresponding indexed node list
     Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
+    
+    nodenp = np.array(size=(len(Nodes),5))
+    #np.reshape(nodenp, (len(Nodes),5))
+    
+
+    
     
     #gets the corresponding indices of the cells start and goal
     start_index = utilities.coordinatesToIndex(start_coordinates, d_)
@@ -208,46 +214,6 @@ def test2(h):
     return 'ok'
 
 @eel.expose
-def testLidar(usb):
-    from rplidar import RPLidar
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import matplotlib.animation as animation
-    PORT_NAME =usb# '/dev/ttyUSB'
-    DMAX = 7000
-    IMIN = 0
-    IMAX = 100
-    def update_line(num, iterator, line):
-        scan = next(iterator)
-        offsets = np.array([(np.radians(meas[1]), meas[2]) for meas in scan])
-        line.set_offsets(offsets)
-        intens = np.array([meas[0] for meas in scan])
-        #print intens
-        #print offsets
-        
-        line.set_array(intens)
-        #time.sleep(2)
-        return line,
-    def run():
-        lidar = RPLidar(PORT_NAME)
-        print lidar.get_info()
-        fig = plt.figure()
-        ax = plt.subplot(111, projection='polar')
-        line = ax.scatter([0, 0], [0, 0], s=5, c=[IMIN, IMAX],
-                               cmap='Greys_r', lw=4)
-        ax.set_rmax(DMAX)
-        ax.grid(True)
-        iterator = lidar.iter_scans(scan_type='normal')
-        ani = animation.FuncAnimation(fig, update_line,
-            fargs=(iterator, line), interval=1)
-        plt.show()
-        lidar.stop()
-        lidar.disconnect()
-    run()
-
-#testLidar(sens.ser)
-
-@eel.expose
 def TESTMODE():
     global UAV
     MODE = ['LAND','STABILIZE','GUIDED']
@@ -257,8 +223,6 @@ def TESTMODE():
 @eel.expose
 def stopMOHPP():
     return sys.exit(0)
-
-
 
 eel.start('index.html', my_options, block = True)
 
