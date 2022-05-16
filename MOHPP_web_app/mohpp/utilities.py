@@ -5,35 +5,50 @@ Created on Jul 8, 2021
 '''
 from math import floor, cos, sin, pi, sqrt, log10
 import numpy as np
+from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from heapq import heappop
 from Tkinter import *
 import time
 from autobahn.twisted.util import sleep
+from matplotlib.projections import projection_registry
 risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
 KNOWN_OBSTACLE = 1
 FORBIDDEN = -1 
 NEW_FORBIDDEN = -2 
-INFINI=9999999.0
-width, height = 200, 150
+INFINI=9999.0
+width, height, depth = 100, 100,50
 echelle = 2
 FAR, KNOWN, FROZEN = -1,0,1
 globalPath = []
-d_ = [width, width*height]
+#d_ = [width, width*height]
+d_ =[width, width*height, width*height*depth] 
 
-def coordinatesToIndex(current_coordinates, d_ = [-1, -1]):
+def coordinatesToIndex(current_coordinates, d_ = [-1, -1, -1], dim = 2):
     
     idx = current_coordinates[0]
-    idx += current_coordinates[1] * d_[0]
+    for i in range(1,dim):
+        idx += current_coordinates[i] * d_[i-1]
     return idx
+
+def indexToCoordinates3D(inde,coord):
+    
+    coord[2] = int(floor(inde/d_[1]))
+    aux = inde-coord[2]*d_[1]
+    coord[1] = int(floor(aux/d_[0]))
+    aux -= coord[1]*d_[0]
+    coord[0] = aux 
+    
+    return coord
 
 def indexToCoordinates(idx, d_ = [-1, -1]):
     current_coordinates = [-1, -1]
     current_coordinates[1] = int(floor(idx/d_[0]))
     current_coordinates[0] = (idx-current_coordinates[1]*d_[0])      
     return current_coordinates
+
 
 def getmaxcost(l):
 
@@ -66,8 +81,8 @@ def getNorth_East_Down(current, nextStep, down, default_altitude):
     
     return dNorth, dEast, dDown
 
-def sqrt_dist(a,b,c = 0):
-    return sqrt(a**2+b**2+c**2)
+def sqrt_dist(a,b,c = 0,fac= 0):
+    return round(sqrt(a**2+b**2+c**2),4)*fac
 
 def wavePlot(r= -1, r2= -1,nodes = [],path = [], start = [], goal = []):
     zVelocity = [[0 for _ in range(r)] for _ in range(r2)]
@@ -112,13 +127,16 @@ def isEmptyList(l):
 def locateBestIdx(l):
     
     b =(INFINI,INFINI)
-    ids = 0
+    ids = -1
     for co,i in enumerate(l):
         if i !=[] and i[0]<b:
             b = i[0]
             ids = co
     #return the popped best element in the hosting list
-    return heappop(l[ids])
+    if ids!=-1:
+        return heappop(l[ids])
+    else:
+        return -1
 
 def UavHeading(heading):
     return heading*pi/180
@@ -352,6 +370,7 @@ def dessiner(noeud,col, grille):
            
             grille.create_rectangle(noeud.abscice*echelle,noeud.colonne*echelle,noeud.abscice*echelle+echelle,
                                         noeud.colonne*echelle+echelle,outline = col,fill=col)
+
 def dessinerPath(x,y,co, grille, fenetre):
  
             
@@ -386,4 +405,43 @@ def drawTK(Nodes, path = globalPath):
             fenetre.update()
             x= i  
     fenetre.mainloop()     
+
+def MAP3DShow(node, sobs,path = None):
+    x,y,z = [],[],[]
+#    x1,y1,z1 = [],[],[]
+    coord = [-1,-1,-1]
     
+    for i in sobs:
+        if node[i].OBSTACLE ==KNOWN_OBSTACLE:
+            coord=indexToCoordinates3D(i,coord)
+    
+            x.append(coord[0])
+            y.append(coord[1])
+            z.append(coord[2])
+    """
+    if len(path) != 0:
+        
+        for i in path:
+            x1.append(i[0])
+            y1.append(i[1])
+            z1.append(i[2])
+    """
+    
+    ax = plt.axes(projection ='3d')
+    
+    ax.set_xlabel('width')
+    ax.set_ylabel('height')
+    ax.set_zlabel('deep (z+)');
+    
+    plt.xlim(0,201)
+    plt.ylim(0,201)
+    
+    s = ax.scatter3D(x,y,z,cmap='black')
+    
+    s.set_edgecolors = s.setfacecolors = lambda *args:None
+    """
+    if len(path) !=0:
+        
+        ax.plot3D(x1, y1, z1,'orange',linewidth = 2)
+    """
+    plt.show()

@@ -39,7 +39,7 @@ class node3():
         self.lat = None
         self.TAG = None
         self.OBSTACLE = 0
-        self.cost = -1.0
+        self.cost = INFINI
         self.type =FAR
         self.v = 1.0
         self.block = 0 # the containing block

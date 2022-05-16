@@ -13,7 +13,7 @@ Created on Jul 12, 2021
 import os,time, eel, sys
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import  DetectUnexpectedObs, height, width, d_,UavHeading, wavePlot, drawTK, globalPath
+from mohpp.utilities import  DetectUnexpectedObs, height, width, depth, d_,UavHeading, wavePlot, drawTK, globalPath, MAP3DShow
 from UavAndSensors.Sensors import Sensors
 from math import floor
 import numpy as np
@@ -24,7 +24,8 @@ UAV = None
 #global variable to store the sensed data and return it for the need
 sensedData = {}
 
-start_coordinates, goal_coordinates = [96,70],[20,50]#[60,96],[105,38]#colonne/ligne (East/North)
+start_coordinates, goal_coordinates = [96,70,5],[20,50,21]#[60,96],[105,38]#colonne/ligne (East/North)
+startd_3, goald_3 = [],[]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM, extendedObs, start_index, goal_index = [],[],[], [], -1,-1
 extendedObs = []
@@ -77,9 +78,10 @@ def Launch():
     binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
     
     #defines the obstacles and return the corresponding indexed node list
-    Nodes, srcObs, block = MAP.processMap(width, height, binMap, seq =1, nbr_blocks=25)
-    
-    nodenp = np.array(size=(len(Nodes),5))
+    #Nodes, srcObs, block = MAP.MAP_2D.processMap(width, height, binMap, seq =1, nbr_blocks=25)
+    Nodes, srcObs, block = MAP.MAP_3D().processMap_3D(seq=1)
+    #MAP3DShow(Nodes, srcObs)
+    #nodenp = np.array(size=(len(Nodes),5))
     #np.reshape(nodenp, (len(Nodes),5))
     
 
@@ -91,7 +93,7 @@ def Launch():
     #print utilities.indexToCoordinates(start_index, d_),utilities.indexToCoordinates(goal_index, d_)
 
     #computes the velocity and the travel time at each node of the map
-    CDM = CDMap.get_Vel_Cost(Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
+    CDM = CDMap.get_Vel_Cost(3, Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
     #wavePlot(d_[0], d_[1]/d_[0], CDM)
     plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
     #drawTK(Nodes, [start_coordinates,goal_coordinates])
