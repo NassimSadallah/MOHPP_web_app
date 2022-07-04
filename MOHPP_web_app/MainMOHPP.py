@@ -13,22 +13,26 @@ Created on Jul 12, 2021
 import os,time, eel, sys
 from mohpp import MAP, CDMap, utilities, OFPSearch, ONPSearch
 from UavAndSensors import VehiclesMethods as VeMeth
-from mohpp.utilities import  DetectUnexpectedObs, height, width, depth, d_,UavHeading, wavePlot, drawTK, globalPath, MAP3DShow
+from mohpp.utilities import  DetectUnexpectedObs, height, width,depth,d_parallel, d_,UavHeading, wavePlot, drawTK, globalPath, MAP3DShow, coordinatesToIndex,indexToCoordinates3D
 from UavAndSensors.Sensors import Sensors
 from math import floor
 import numpy as np
+import multiprocessing as mp
+from __builtin__ import True
+
 
 sitl_connect ='127.0.0.1:14550'
 real_connect ='/dev/ttyAMA0' 
 UAV = None
 #global variable to store the sensed data and return it for the need
 sensedData = {}
-
-start_coordinates, goal_coordinates = [96,70,5],[20,50,21]#[60,96],[105,38]#colonne/ligne (East/North)
+                                      #z,y,x(3rd dim)
+start_coordinates, goal_coordinates = [12,17,17],[87,95,39]#[z,y,x][60,96],[105,38]#colonne/ligne (East/North)
 startd_3, goald_3 = [],[]
 nextStep, current = [-1.0, -1.0],[-1.0, -1.0]
 plannedPath, Nodes, CDM, extendedObs, start_index, goal_index = [],[],[], [], -1,-1
-extendedObs = []
+extendedObs, GhostSet = [],[]
+
 my_options = {
     'mode': "None",
     'host': '0.0.0.0',
@@ -71,32 +75,103 @@ def connect(sens):
 @eel.expose
 def Launch():
     
-    global plannedPath, Nodes, goal_index, CDM, start_index, extendedObs     
-    alpha = 0.01* int(str(eel.saturation()()))
+    global plannedPath, Nodes, goal_index, CDM, start_index, extendedObs,GhostSet, directBlk     
+    alpha = 0.2#0.01* int(str(eel.saturation()()))
 
     #reads the binary map from the binarymaps package
     binMap = os.path.join(os.path.dirname(os.path.abspath(__file__))+"/binarymaps/simulation.png")
     
     #defines the obstacles and return the corresponding indexed node list
     #Nodes, srcObs, block = MAP.MAP_2D.processMap(width, height, binMap, seq =1, nbr_blocks=25)
-    Nodes, srcObs, block = MAP.MAP_3D().processMap_3D(seq=1)
-    #MAP3DShow(Nodes, srcObs)
+    GhostSet,directBlk, nodeslist, Nodes,srcObs, block,dp, hei, wid = MAP.MAP_3D().processMap_3D(seq=1, )
+    #MAP3DShow(Nodes, srcObs, [])
     #nodenp = np.array(size=(len(Nodes),5))
     #np.reshape(nodenp, (len(Nodes),5))
-    
-
+    #print(len(srcObs), block)#nodeslist[0])
+    #time.sleep(10000)
     
     
     #gets the corresponding indices of the cells start and goal
-    start_index = utilities.coordinatesToIndex(start_coordinates, d_)
-    goal_index = utilities.coordinatesToIndex(goal_coordinates, d_)
-    #print utilities.indexToCoordinates(start_index, d_),utilities.indexToCoordinates(goal_index, d_)
-
+    start_index = coordinatesToIndex(start_coordinates, 3)
+    goal_index = coordinatesToIndex(goal_coordinates, 3)
+   
+    #MAP3DShow(Nodes, srcObs,[])
     #computes the velocity and the travel time at each node of the map
-    CDM = CDMap.get_Vel_Cost(3, Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
+    if __name__=='__main__':
+        
+        startObs = [[] for _ in range(block)]
+
+        state = [False for _ in range(block)]
+        for i in srcObs:
+            #print i, Nodes[i].idx, Nodes[i].block
+            startObs[Nodes[i].block].append(Nodes[i].idx)
+            #state[Nodes[i].block] = True
+            
+        #print startObs[0],startObs[50], startObs[450]
+        from mohpp import FastMarching
+        initime = time.time()
+        ite = 0
+        
+        print d_parallel 
+        d_par = [[dp+directBlk[i][0],(dp+directBlk[i][0])*(hei+directBlk[i][1]),\
+            (dp+directBlk[i][0])*(hei+directBlk[i][1])*(wid+directBlk[i][2])] for i in range(block)] 
+        
+        print len(nodeslist[0]),directBlk[0][2],d_par[0], len(nodeslist[1]),d_par[1],len(nodeslist[224]), d_par[224] 
+        time.sleep(1000)    
+        
+        VelMap=FastMarching.MSfm3D_SeqPar(startObs,-1, -1,-1, nodeslist, GhostSet, d_par,True, False, state, block)
+        
+        vmap = []
+        
+        vmap=CDMap.get_Vel_Cost(nodes = VelMap.nodesList, alpha = alpha, Velocity=1, block = block)
+        
+        goal = Nodes[goal_index]
+        sblk = Nodes[start_index].block
+        gblk = goal.block
+        startObs = []
+        startObs.append(Nodes[start_index].idx)
+        print startObs,Nodes[start_index].block,Nodes[start_index].idx
+        
+        CDM=FastMarching.MSfm3D_SeqPar(startObs,sblk, goal,gblk, vmap, GhostSet, d_par,True, False, state, block)
+       
+        """
+        queue = mp.Queue()
+        
+        def child_init(stPts, g, nlist,d_,):
+            print("initializing ...")
+            global d_parallel, startObs, nodeslist,Nodes, block, goal_index
+            startObs = stPts
+            nodeslist = nlist
+            d_parallel = d_
+            goal_index = g
+        
+        
+        pool = mp.Pool(block, initializer = child_init, initargs = (startObs,-1,nodeslist, d_parallel))# for i in range(4)]
+        #print("well finished ",time.time() - tic)
+        res = [pool.apply_async(FastMarching.ParallelMSFM(), (state[i],queue, True, False,1,1, i)) for i in range(block)]    
+        
+        #for i in range(block):
+        #    pool.apply_async(FastMarching.ParallelMSFM(state[i],queue,startObs[i], -1, [], nodeslist[i], d_parallel, True, False, 1, 1, i))
+         
+        pool = mp.Pool(processes=block)   
+        res = [pool.apply_async(FastMarching.ParallelMSFM(state[i],queue,startObs[i], -1, [], nodeslist[i], d_parallel, True, False, 1, 1, i)) for i in range(block)]
+        #pool = [mp.Process(target =FastMarching.ParallelMSFM(startObs[i], -1, Nodes,nodeslist[i], d_parallel, True, False, 1, 1, i)) for i in range(block)]
+    
+        del startObs
+        #del Nodes
+
+        r =0# [queue.get() for _ in pool]  
+        print 'r ',r
+        time.sleep(10000)      
+        g_index = Nodes[goal_index].idx 
+        s_index = Nodes[start_index].idx   
+        #CDM = [pool.apply_async(FastMarching.ParallelMSFM(queue,[s_index], g_index, [], nodeslist[i], d_parallel, True, False, 1, 1, i)) for i in range(block)]
+        #CDM = CDMap.get_Vel_Cost(3, Nodes, srcObs, start_index, [goal_index], alpha, 1.0, d_, seq=1,block=block)
     #wavePlot(d_[0], d_[1]/d_[0], CDM)
-    plannedPath = OFPSearch.Gradient(start_index, goal_index, CDM, d_)
+        """
+        plannedPath = OFPSearch.Gradient_3D(start_index, goal_index, CDM.nodesList,Nodes, 3)
     #drawTK(Nodes, [start_coordinates,goal_coordinates])
+    MAP3DShow(CDM, srcObs, plannedPath)
     return 'Done !'
 
 @eel.expose
@@ -197,7 +272,6 @@ def Land(uav):
     print('Landing mode activated ...')
     VeMeth.UAV.Land(uav)
     
-
 @eel.expose
 def test1(h):
     global plannedPath, Nodes, goal_index, CDM,start_index, extendedObs 
@@ -226,6 +300,8 @@ def TESTMODE():
 def stopMOHPP():
     return sys.exit(0)
 
+#if __name__=='__main__':
+    
 eel.start('index.html', my_options, block = True)
 
 

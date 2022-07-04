@@ -10,31 +10,40 @@ import matplotlib.pyplot as plt
 from heapq import heappop
 from Tkinter import *
 import time
+from multiprocessing import Queue
 from autobahn.twisted.util import sleep
 from matplotlib.projections import projection_registry
+
+global que
+que = Queue()
+
 risks = 0
 UNDETECTED_OBSTACLE =-1 
 NO_OBSTACLE = 0
 KNOWN_OBSTACLE = 1
+CONTOUR = -5
 FORBIDDEN = -1 
 NEW_FORBIDDEN = -2 
 INFINI=9999.0
-width, height, depth = 100, 100,50
+width, height, depth = 100, 100,100# named in nodes as : z,y,x
 echelle = 2
-FAR, KNOWN, FROZEN = -1,0,1
+FAR, KNOWN, FROZEN, FROZEN_FIX = -1,0,1,2
 globalPath = []
 #d_ = [width, width*height]
 d_ =[width, width*height, width*height*depth] 
+d_parallels = [12,12*12,12*12*12]
+d_parallel = [10,100,500]
 
-def coordinatesToIndex(current_coordinates, d_ = [-1, -1, -1], dim = 2):
+def coordinatesToIndex(current_coordinates, dim = 3):
     
     idx = current_coordinates[0]
     for i in range(1,dim):
         idx += current_coordinates[i] * d_[i-1]
+
     return idx
 
-def indexToCoordinates3D(inde,coord):
-    
+def indexToCoordinates3D(inde, dim):
+    coord = [0 for _ in range(dim)]
     coord[2] = int(floor(inde/d_[1]))
     aux = inde-coord[2]*d_[1]
     coord[1] = int(floor(aux/d_[0]))
@@ -81,8 +90,9 @@ def getNorth_East_Down(current, nextStep, down, default_altitude):
     
     return dNorth, dEast, dDown
 
-def sqrt_dist(a,b,c = 0,fac= 0):
-    return round(sqrt(a**2+b**2+c**2),4)*fac
+def sqrt_dist(a,b,c = 0):
+    
+    return round(sqrt(a*a+b*b+c*c),4)
 
 def wavePlot(r= -1, r2= -1,nodes = [],path = [], start = [], goal = []):
     zVelocity = [[0 for _ in range(r)] for _ in range(r2)]
@@ -408,24 +418,25 @@ def drawTK(Nodes, path = globalPath):
 
 def MAP3DShow(node, sobs,path = None):
     x,y,z = [],[],[]
-#    x1,y1,z1 = [],[],[]
+    x1,y1,z1 = [],[],[]
     coord = [-1,-1,-1]
     
     for i in sobs:
+       
         if node[i].OBSTACLE ==KNOWN_OBSTACLE:
-            coord=indexToCoordinates3D(i,coord)
+            coord=indexToCoordinates3D(i,3)
     
             x.append(coord[0])
             y.append(coord[1])
             z.append(coord[2])
-    """
+    
     if len(path) != 0:
         
         for i in path:
             x1.append(i[0])
             y1.append(i[1])
             z1.append(i[2])
-    """
+    
     
     ax = plt.axes(projection ='3d')
     
@@ -439,9 +450,10 @@ def MAP3DShow(node, sobs,path = None):
     s = ax.scatter3D(x,y,z,cmap='black')
     
     s.set_edgecolors = s.setfacecolors = lambda *args:None
-    """
+    
     if len(path) !=0:
         
         ax.plot3D(x1, y1, z1,'orange',linewidth = 2)
-    """
+    
     plt.show()
+
