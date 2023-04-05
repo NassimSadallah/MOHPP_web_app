@@ -59,3 +59,5 @@ class node3():
         self.H = 0
         self.parent = self
         self.visited = False
+        self.anltic = 0.0
+        self.anltic2 = 0.0

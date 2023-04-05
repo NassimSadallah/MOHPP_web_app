@@ -9,8 +9,9 @@ from Node import node, node3
 from utilities import height, d_, width, depth, FORBIDDEN, CONTOUR,NO_OBSTACLE, KNOWN_OBSTACLE, UNDETECTED_OBSTACLE,d_parallel
 from math import floor
 from copy import deepcopy
-
-tabGrid, GridMap, nodeList,Nodelist = [],[],[],[]
+import multiprocessing as mp
+from mohpp.utilities import sqrt_dist
+tabGrid, GridMap, nodeList,Nodelist,ghostzones = [],[],[],[],[]
 
 class MAP_2D(object):
         
@@ -151,24 +152,117 @@ class MAP_3D(object):
         #contours
         for i in range(0,depth):
             for j in range(0,height):
-                    tabGrid[i][j][0] =-2
+                    tabGrid[i][j][0] =-1
         for i in range(0,depth):
             for j in range(width):
-                    tabGrid[i][0][j] =-2
+                    tabGrid[i][0][j] =-1
         for i in range(0,height):
             for j in range(0,width):
-                    tabGrid[0][i][j] =-2
+                    tabGrid[0][i][j] =-1
         #contours
         for i in range(0,depth):
             for j in range(0,height):
-                    tabGrid[i][j][width-1] =-2
+                    tabGrid[i][j][width-1] =-1
         for i in range(0,depth):
             for j in range(width):
-                    tabGrid[i][height-1][j] =-2
+                    tabGrid[i][height-1][j] =-1
         for i in range(0,height):
             for j in range(0,width):
-                    tabGrid[depth-1][i][j] =-2
+                    tabGrid[depth-1][i][j] =-1
+   
+    def accuracy_Test(self):
+        
+        #tabGrid[0][0][0] = -1
+        tabGrid[depth/2-1][height/2-1][width/2 -1] = -1
+        #tabGrid[depth/2-1][height/2-1][width/2 -1] = -1
+        
+    def TinyMAP3D(self):
+        #tabGrid[0][0][0] =-1
+        
+        #obs1
+        for i in range(1,3):
+            for j in range(5,7):
+                for k in range(4,6):
+                    tabGrid[i][j][k] =-1     
+        
+        #d[1] up to down 
+        #contours
+        for i in range(0,depth):
+            for j in range(0,height):
+                    tabGrid[i][j][0] =-1
+        for i in range(0,depth):
+            for j in range(0,height):
+                    tabGrid[i][j][width-1] =-1                    
+        
+        #left to right 
+        for i in range(0,depth):
+            for j in range(width):
+                    tabGrid[i][0][j] =-1
+        for i in range(0,depth):
+            for j in range(width):
+                    tabGrid[i][height-1][j] =-1                    
+                  
+        for i in range(0,height):
+            for j in range(0,width):
+                    tabGrid[0][i][j] =-1
+        for i in range(0,height):
+            for j in range(0,width):
+                    tabGrid[depth-1][i][j] =-1
     
+    def lesObstacles3d(self):
+        
+        #obstacle 1
+        for k in range(45):
+            for i in range(40,80):
+                for j in range(0,5):
+                    tabGrid[j][i][k] =-1
+                    
+        for k in range(65):                   
+            for i in range(40,80):
+                for j in range(55,60):
+                    tabGrid[j][i][k] =-1
+        for k in range(25):            
+            for i in range(75,80):
+                for j in range(5,55):
+                    tabGrid[j][i][k] =-1
+
+        
+        #obstacle 2
+        
+        for i in range(40,80):
+            for j in range(80,85):
+                tabGrid[j][i][1] =-1        
+        for i in range(40,80):
+            for j in range(45,50):
+                tabGrid[j][i][1] =-1
+        for i in range(80,45):
+            for j in range(75,80):
+                tabGrid[i][j][1] =-1
+    
+        #obstacle 3
+        for i in range(20,60):
+            for j in range(30,35):
+                tabGrid[j][i][1] =-1        
+        for i in range(20,60):
+            for j in range(10,15):
+                tabGrid[j][i][1] =-1
+        for i in range(5,10):
+            for j in range(20,25):
+                tabGrid[i][j][1] =-1
+        
+        #excptected obstacle
+        
+        for i in range(55,95):
+            for j in range(30,35):
+                tabGrid[i][j][3] =-2
+                
+        for i in range(90,95):        
+            for j in range(10,35):
+                tabGrid[i][j][4] =-2    
+        for i in range(50,55):        
+            for j in range(10,35):
+                tabGrid[i][j][4] =-2  
+
     def lesObstacles3D(self):
         
         #obs1
@@ -180,18 +274,18 @@ class MAP_3D(object):
         #contours
         for i in range (depth):
             for j in range(height):
-                tabGrid[i][j][0] = -1
-                #tabGrid[i][j][width-1] = -1
+                tabGrid[i][j][0] = -5
+                tabGrid[i][j][width-1] = -5
         
         for i in range (height):
             for j in range (width):
-                tabGrid[0][i][j] = -1
-                #tabGrid[depth-1][i][j] = -1 
+                tabGrid[0][i][j] = -5
+                tabGrid[depth-1][i][j] = -5 
                 
         for i in range (depth):
             for j in range (width):
-                tabGrid[i][0][j] = -1
-                #tabGrid[i][height-1][j] = -1 
+                tabGrid[i][0][j] = -5
+                tabGrid[i][height-1][j] = -5 
                                          
         
         
@@ -280,16 +374,16 @@ class MAP_3D(object):
                         GridMap[l][c][d].OBSTACLE = NO_OBSTACLE  
     
     def segmention(self, x, y, z,nbrBlk):
-        
+                                        
         blkx, blky, blkz = nbrBlk/(x), nbrBlk/(y/2), nbrBlk/(z/2)       
         #blkx, blky, blkz = nbrBlk/(x), nbrBlk/(y), nbrBlk/(z)#1000
-        #blkx, blky, blkz = 1,2,2
+        #blkx, blky, blkz = 2,2,2
         #length of blocks
         subx, suby, subz = x/blkx,y/blky,z/blkz
         X,Y,Z = [],[],[]
         Nodelist = [[] for _ in range(nbrBlk)]
         print( blkx, blky, blkz ,subx, suby, subz )
-
+        blk_xyz = []
         #time.sleep(5000)
         for i in range(blkx):
             X.append((subx*i,subx*(1+i)))
@@ -299,189 +393,225 @@ class MAP_3D(object):
         #print Y
         for i in range(blkz):    
             Z.append((subz*i,subz*(1+i)))
-        nbr = 0            
-        for i in X:
-            for j in Y:
-                for k in Z:
-                    #co = 0
-                    for a in range(i[0],i[1]):
-                        for b in range(j[0],j[1]):
-                            for c in range(k[0],k[1]):
-
-                                
-                                if i[0] > 0 :
-                                    GridMap[i[0]][b][c].OBSTACLE = CONTOUR
-                                    GridMap[i[0]][b][c].ghost = True
-                                if i[1]<x:
-                                    GridMap[i[1]-1][b][c].OBSTACLE = CONTOUR
-                                    GridMap[i[1]-1][b][c].ghost = True
-                                if j[0] > 0 :
-                                    GridMap[a][j[0]][c].OBSTACLE = CONTOUR
-                                    GridMap[a][j[0]][c].ghost = True
-                                if j[1]<y:
-                                    GridMap[a][j[1]-1][c].OBSTACLE = CONTOUR
-                                    GridMap[a][j[1]-1][c].ghost = True
-                                if k[0] > 0 :
-                                    GridMap[a][b][k[0]].OBSTACLE = CONTOUR
-                                    GridMap[a][b][k[0]].ghost = True
-                                if k[1]<y:    
-                                    GridMap[a][b][k[1]-1].OBSTACLE = CONTOUR
-                                    GridMap[a][b][k[1]-1].ghost = True
-
-                                #print('abc ',a,b,c,' nbr ', nbr)  
-                                GridMap[a][b][c].block = nbr
-                                
-                                #GridMap[a][b][c].idx,GridMap[a][b][c].sndidx  = co,co
-                                #GridMap[a][b][c].sndidx  = co
-                                
-                                #co+=1
-                    #print(nbr, co)
-                    nbr+=1
-        
-        directionblock = [[0,0,0] for _ in range(nbrBlk)]
-        
-        ghostnodes = [[] for _ in range(nbrBlk)]
-   
-        nbr = 0 
-        Blft, Brgt, Bfrwd, Bbckrd, Bup, Bdwn = False, False,False, False,False, False
-        for i in X:
-            for j in Y:
-                for k in Z: 
+        nbr,indice = 0,0            
+        for db,i in enumerate(X):
+            for hb,j in enumerate(Y):
+                for wb,k in enumerate(Z):
+                    
                     co = 0
-                    lft, rgt, frwd, bckrd, up, dwn = nbr-1,nbr+1,nbr-d_parallel[0], nbr+d_parallel[0], nbr-d_parallel[1],nbr+d_parallel[1]
-                    Blft, Brgt, Bfrwd, Bbckrd, Bup, Bdwn = False, False,False, False,False, False
                     for a in range(i[0],i[1]):
                         for b in range(j[0],j[1]):
                             for c in range(k[0],k[1]):
                                 
-                                #left right
+                                if i[0] > 0 and GridMap[i[0]][b][c].OBSTACLE != KNOWN_OBSTACLE:
+                                    GridMap[i[0]][b][c].ghost = True
+                                    
+                                if i[1]<x and GridMap[i[1]-1][b][c].OBSTACLE != KNOWN_OBSTACLE:
+                                    GridMap[i[1]-1][b][c].ghost = True
+                                    
+                                if j[0] > 0 and GridMap[a][j[0]][c].OBSTACLE != KNOWN_OBSTACLE:
+                                    GridMap[a][j[0]][c].ghost = True
+                                    
+                                if j[1]<y and GridMap[a][j[1]-1][c].OBSTACLE != KNOWN_OBSTACLE:
+                                    GridMap[a][j[1]-1][c].ghost = True
+                                    
+                                if k[0] > 0 and GridMap[a][b][k[0]].OBSTACLE != KNOWN_OBSTACLE:
+                                    GridMap[a][b][k[0]].ghost = True
+                                    
+                                if k[1]<z and GridMap[a][b][k[1]-1].OBSTACLE != KNOWN_OBSTACLE:    
+                                    GridMap[a][b][k[1]-1].ghost = True  
+                                    
+                                GridMap[a][b][c].block = nbr
+                                GridMap[a][b][c].indice = indice
+                                indice+=1
                                 
-                                if lft>=0 and int(floor(lft/d_parallel[0]))==int(floor(nbr/d_parallel[0])):
+                    blk_xyz.append([wb,hb,db])
+                    nbr+=1
+                    
+        blk_d = [wb+1, hb+1, db+1]
+        
+        d_p = [blk_d[0],blk_d[0]*blk_d[1],blk_d[0]*blk_d[1]*blk_d[2]]
+        print blk_d, d_p
+
+        ghostnodes = [[] for _ in range(nbrBlk)]
+        neighBlk = [[-1,-1,-1,-1,-1,-1] for _ in range(nbrBlk)]
+        nbr = 0 
+        d_par = [[0,0,0] for _ in range(nbrBlk)]
+        srcObstacles = [[] for _ in range(nbrBlk)]
+        
+        for ii,i in enumerate(X):
+            for jj,j in enumerate(Y):
+                for kk,k in enumerate(Z): 
+                    co, c0,c2,c1 = 0,0,0,0
+                    lft, rgt, frwd, bckrd, up, dwn = nbr-1,nbr+1,nbr-blk_d[0], nbr+blk_d[0], nbr-blk_d[0]*blk_d[1],nbr+blk_d[0]*blk_d[1]
+                    
+                    c2 = 0
+                    for a in range(i[0],i[1]):
+                        c1 = 0
+                        for b in range(j[0],j[1]):
+                            c0 = 0
+                            for c in range(k[0],k[1]):
+                            
+                                #left right
+                                if lft>=0 and int(floor(lft/d_p[0]))==int(floor(nbr/d_p[0])):
             
                                     if k[0] > 0 and c == k[0]:
  
                                         if GridMap[a][b][c-1].ghost:
                                             #print GridMap[a][b][c-1].idx 
                                             ghost = deepcopy(GridMap[a][b][c-1])#
-                                            ghost.idx = co
-                                            
-                                            #print 'test Gridmap and ghosts and ghost ',nbr,id(GridMap[a][b][c-1]), id(ghost)
-     
+                                            ghost.idx = co                                           
                                             ghostnodes[nbr].append(ghost) 
                                             Nodelist[nbr].append(ghost)
-                                            Blft = True
                                             co+=1
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1 
+                                            neighBlk[nbr][0] =  lft                                                
                         
-                                if rgt<d_parallel[2] and (int(floor(rgt/d_parallel[0]))==int(floor(nbr/d_parallel[0]))):
+                                if rgt<d_p[2] and (int(floor(rgt/d_p[0]))==int(floor(nbr/d_p[0]))):
                         
-                                    if k[1] < d_parallel[1] and c +1 ==k[1]:
+                                    if k[1] < d_p[1] and c +1 ==k[1]:
                          
-                                        if GridMap[a][b][k[1]].ghost:
-
-                                            
+                                        if GridMap[a][b][k[1]].ghost :
                                             ghost = deepcopy(GridMap[a][b][c+1])
-                                            ghost.idx = co
+                                            ghost.idx = co                                        
                                             ghostnodes[nbr].append(ghost) 
                                             co+=1
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1                                            
                                             Nodelist[nbr].append(ghost)
-                                            Brgt = True
-                                                                                        
+                                            neighBlk[nbr][1] = rgt
                                 # front back side
-                                if frwd>=0 and (int(floor(frwd/d_parallel[1]))==int(floor(nbr/d_parallel[1]))):
+                                if frwd>=0 and (int(floor(frwd/d_p[1]))==int(floor(nbr/d_p[1]))):
                       
                                     if j[0] > 0 and b==j[0]:
                              
-                                        if GridMap[a][j[0]-1][c].ghost:
+                                        if GridMap[a][j[0]-1][c].ghost :
                                             
                                             ghost = deepcopy(GridMap[a][b-1][c])
-                                            ghost.idx = co
+                                            ghost.idx = co                                          
                                             ghostnodes[nbr].append(ghost)
                                             co+=1
-                                            #print ' frwd  <<',ghost.indice,GridMap[a][b][c].indice,'>>'
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1          
+                                            neighBlk[nbr][2] = frwd                                   
+                                            #print ' frwd  <<',(a,b,c),(ghost.x,ghost.y,ghost.z),ghost.indice,GridMap[a][b][c].indice,'>>'
                                             Nodelist[nbr].append(ghost)
-                                                    
-                                            Bfrwd =True                                    
-                                            
-                                if bckrd<d_parallel[2] and (int(floor(bckrd/d_parallel[1]))==int(floor(nbr/d_parallel[1]))):            
+
+                                if bckrd<d_p[2] and (int(floor(bckrd/d_p[1]))==int(floor(nbr/d_p[1]))):            
                     
-                                    if j[1] < d_parallel[1] and b+1==j[1]:
-
-                                        if GridMap[a][j[1]][c].ghost:
-
-                                            
-                                            ghost = deepcopy(GridMap[a][b+1][c])
+                                    if j[1] < d_p[1] and b+1==j[1]:
+                                                                                    
+                                        if GridMap[a][j[1]][c].ghost :
+                                                                                                                              
+                                            ghost = deepcopy(GridMap[a][b+1][c])                                            
                                             ghost.idx = co
                                             ghostnodes[nbr].append(ghost)
+
                                             co+=1
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1    
+                                            neighBlk[nbr][3] = bckrd                                        
                                             #print ' bck  <<',ghost.indice,GridMap[a][b+1][c].indice,'>>', ghost.x, ghost.y, ghost.z,' --',GridMap[a][b+1][c].x,GridMap[a][b+1][c].y,GridMap[a][b+1][c].z
                                             Nodelist[nbr].append(ghost)
-                                            
-                                            Bbckrd = True                                            
-                                            
+
                                 #up down neighbor                    
-                                if up>=0 and (int(floor(up/d_parallel[2]))==int(floor(nbr/d_parallel[2]))): 
+                                if up>=0 and (int(floor(up/d_p[2]))==int(floor(nbr/d_p[2]))): 
+                                    #print 'testt' ,int(floor(up/d_parallel[2])),int(floor(nbr/d_parallel[2]))
                                     if i[0] > 0 and a ==i[0]:
                             
-                                        if GridMap[i[0]-1][b][c].ghost:
+                                        if GridMap[i[0]-1][b][c].ghost :
                                             ghost = deepcopy(GridMap[a-1][b][c])
                                             ghost.idx = co                                            
+
                                             ghostnodes[nbr].append(ghost)
                                             co+=1
-                                            #print ' up  <<',ghost.indice,GridMap[a-1][b][c].indice,'>>', ghost.x, ghost.y, ghost.z,' --',GridMap[a-1][b][c].x,GridMap[a-1][b][c].y,GridMap[a-1][b][c].z
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1                   
+                                            neighBlk[nbr][4] =up                         
                                             Nodelist[nbr].append(ghost)
-                                            
-                                            Bup = True
 
-                                if dwn <=d_parallel[2] and (int(floor(dwn/d_parallel[2]))==int(floor(nbr/d_parallel[2]))):             
+                                if dwn <=d_p[2] and (int(floor(dwn/d_p[2]))==int(floor(nbr/d_p[2]))):             
                                     
-                                    if i[1] < d_parallel[1] and a+1==i[1]:
+                                    if i[1] < d_p[2] and a+1==i[1]:
 
-                                        if GridMap[i[1]][b][c].ghost:
+                                        if GridMap[i[1]][b][c].ghost :
                                             ghost = deepcopy(GridMap[a+1][b][c])
                                             ghost.idx = co
-                                            ghostnodes[nbr].append(ghost)                    
-                                            #print'i1 ',co
-                                            #print ' dwn  <<',ghost.indice,GridMap[a][b][c].indice,'>>', ghost.x, ghost.y, ghost.z,' --',GridMap[a][b][c].x,GridMap[a][b][c].y,GridMap[a][b][c].z 
+                                            ghostnodes[nbr].append(ghost)
                                             Nodelist[nbr].append(ghost)
                                             co+=1
-                                            Bdwn = True
+                                            c0+=1
+                                            c1+=1
+                                            c2+=1
+                                            neighBlk[nbr][5] =dwn
                                 
                                 #print'nbr c ',nbr, co
                                 GridMap[a][b][c].idx = co
                                 co+=1
-                                
+                                c0+=1
+                                c1+=1
+                                c2+=1                                
+                                if GridMap[a][b][c].OBSTACLE == KNOWN_OBSTACLE:
+                                    GridMap[a][b][c].TAG = FORBIDDEN
+                                    srcObstacles[nbr].append(GridMap[a][b][c].idx)
                                 Nodelist[nbr].append(GridMap[a][b][c]) 
-                                #GridMap[a][b][c].sndidx = len(Nodelist[nbr]-1)          
-                    #ghostnodes.append(directionblock)
-                    if Blft:
-                        directionblock[nbr][0]+=1
-                    if Brgt:
-                        directionblock[nbr][0]+=1
-                    if Bup:
-                        directionblock[nbr][2]+=1
-                    if Bdwn:
-                        directionblock[nbr][2]+=1
-                    if Bbckrd:
-                        directionblock[nbr][1]+=1
-                    if Bfrwd:
-                        directionblock[nbr][1]+=1
+                                
+                            d_par[nbr][0] = c0
+                        d_par[nbr][1] = c1
+                    d_par[nbr][2] = c2            
                         
                     nbr+=1
+
         for i in range(nbrBlk):
             for nds in ghostnodes[i]:
                 nds.sndidx = GridMap[nds.x][nds.y][nds.z].idx
-            
-           
-        del  X,Y,Z
+        
+        del  X,Y,Z, ghostnodes
 
-        return  ghostnodes, directionblock, Nodelist,subz, suby, subx
-       
+        return  neighBlk, d_par, Nodelist,srcObstacles, blk_xyz,blk_d
+    
+    def BlkNbr(self, x, y, z, nbrBlk):
+        blkx, blky, blkz = nbrBlk/(x), nbrBlk/(y/2), nbrBlk/(z/2)       
+        #blkx, blky, blkz = nbrBlk/(x), nbrBlk/(y), nbrBlk/(z)#1000
+        #blkx, blky, blkz = 2,2,2# for tiny map test 
+        #length of blocks
+        subx, suby, subz = x/blkx,y/blky,z/blkz
+        X,Y,Z = [],[],[]
+        Nodelist = [[] for _ in range(nbrBlk)]
+        print( blkx, blky, blkz ,subx, suby, subz )
+        blk_xyz = []
+        #time.sleep(5000)
+        for i in range(blkx):
+            X.append((subx*i,subx*(1+i)))
+        #print X
+        for i in range(blky):
+            Y.append((suby*i,suby*(1+i)))
+        #print Y
+        for i in range(blkz):    
+            Z.append((subz*i,subz*(1+i)))
+        nbr=0            
+        for db,i in enumerate(X):
+            for hb,j in enumerate(Y):
+                for wb,k in enumerate(Z):
+                    for a in range(i[0],i[1]):
+                        for b in range(j[0],j[1]):
+                            for c in range(k[0],k[1]):
+                                
+                                GridMap[a][b][c].block = nbr
+                    nbr+=1        
+               
     def processMap_3D(self, seq = 0, nbrBlk=0):       
         global tabGrid, GridMap, nodeList        
         tabGrid = [[[0 for _ in range(width)] for _ in range(height)] for _ in range(depth)]  
         GridMap = [[[0 for _ in range(width)] for _ in range(height)] for _ in range(depth)]
         
-        num,num2, nodeList, srcObstacles = 0,0, [], []
+        num, nodeList, srcObstacles = 0, [],[]
         print('--> MAP processing...')
     
         '''
@@ -492,38 +622,76 @@ class MAP_3D(object):
                 for w in range(width):
                     GridMap[d][h][w] = node3(d, h, w)
         
-        self.lesObstacles3D()
+        self.accuracy_Test()
         self.defineObstacles3D()
-        
-        if seq==1:
-            #import multiprocessing as mp
-            nbrBlk =500#mp.cpu_count()
-                    
+      
+        if seq ==0:#MSFM or FM
             
-       
-        for d in range(depth):
-            for h in range(height):
-                for w in range(width):
-   
-                    GridMap[d][h][w].indice = num
-                    
-                    if GridMap[d][h][w].OBSTACLE == KNOWN_OBSTACLE:
-                        GridMap[d][h][w].TAG = FORBIDDEN
-                        srcObstacles.append(GridMap[d][h][w].indice)
+            for d in range(depth):
+                for h in range(height):
+                    for w in range(width):    
+                        GridMap[d][h][w].indice = num
+                        nodeList.append(GridMap[d][h][w])            
+                        if GridMap[d][h][w].OBSTACLE == KNOWN_OBSTACLE or GridMap[d][h][w].OBSTACLE == CONTOUR:
+                            GridMap[d][h][w].TAG = FORBIDDEN
+                            srcObstacles.append(GridMap[d][h][w].indice)            
+                        num+=1
                         
-                    nodeList.append(GridMap[d][h][w])
+            j = nodeList[srcObstacles[0]]
+            
+            print 'nodeobs', j.x,j.y,j.z
+            for i in nodeList:
+                i.anltic  = sqrt_dist((j.x-i.x),(j.y-i.y),(j.z-i.z))
+                #print (i.x, i.y, i.z),'-',(j.x,j.y,j.z),'=', sqrt_dist((j.x-i.x),(j.y-i.y),(j.z-i.z))              
+            del GridMap, tabGrid
+            print'               MAP ready', num, len(nodeList), len(srcObstacles)#, len(srcObstacles)
+    
+            return [],None, nodeList,[], srcObstacles,0,0,None                                    
+
+        elif seq==1:#VZLHGS
+            nbrBlk = 500#8#
+            self.BlkNbr(depth, height, width, nbrBlk)
+            
+            for d in range(depth):
+                for h in range(height):
+                    for w in range(width):    
+            
+                        GridMap[d][h][w].indice = num
+                        nodeList.append(GridMap[d][h][w])            
                         
-                    #Nodelist[GridMap[d][h][w].block].append(GridMap[d][h][w])
+                        if GridMap[d][h][w].OBSTACLE == KNOWN_OBSTACLE:
+                            GridMap[d][h][w].TAG = FORBIDDEN
+                            srcObstacles.append(GridMap[d][h][w].indice)            
+                        num+=1
+                        
+            j = nodeList[srcObstacles[0]]
+            print 'nodeobs', j.x,j.y,j.z
+            for i in nodeList:
+                i.anltic  = sqrt_dist((j.x-i.x),(j.y-i.y),(j.z-i.z))
+                #print (i.x, i.y, i.z),'-',(j.x,j.y,j.z),'=', sqrt_dist((j.x-i.x),(j.y-i.y),(j.z-i.z))     
+                #i.anltic2 = pow((i.x-j.x),2)*1/100+1/20*pow((i.y-j.y),2)+1/20*pow((i.z-j.z),2) 
+                                      
+            del GridMap, tabGrid
+            return [],None, nodeList,[], srcObstacles,nbrBlk,0,None             
         
-                    num+=1
-        ghostzones, directionBlk,Nodelist,dp,he,wi = self.segmention(depth, height, width, nbrBlk)
-        #GhostNodes = self.ghostSets(nbrBlk,Nodelist,x,y,z)            
-        del GridMap, tabGrid
-        print('               MAP ready')#, len(srcObstacles))
+        elif seq==2:
+            #import multiprocessing as mp
+            nbrBlk =500#2*mp.cpu_count()#500#mp.cpu_count()
+            ghostzones, d_par,Nodelist,srcObstacles,blkxyz,blk_d = self.segmention(depth, height, width, nbrBlk)
+            #print#[Nodelist[0][i].block for i in range(len(Nodelist[0]))]
 
-        return ghostzones,directionBlk,Nodelist, nodeList, srcObstacles,nbrBlk,dp,he,wi
-
-
+             
+            for d in range(depth):
+                for h in range(height):
+                    for w in range(width):    
+                        nodeList.append(GridMap[d][h][w])
+            
+            del GridMap, tabGrid
+            print('               MAP ready')#, len(srcObstacles))
+        
+            return ghostzones,d_par,Nodelist, nodeList, srcObstacles,nbrBlk,blkxyz,blk_d
+                                
+        
     """
     def segmention(self, x, y, z,nbrBlk):
         

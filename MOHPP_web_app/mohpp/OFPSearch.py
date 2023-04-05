@@ -34,7 +34,7 @@ def computeGradientDescent(s_idx, g_idx, nodes, d_, dim):
         max_grad = gradient[0]
         
         for i in range(1, dim):
-
+            gradient[i]= (nodes[idx-d_[i+1]].cost/2)-(nodes[idx-d_[i-1]].cost/2) 
             if (isinf(gradient[i]) and gradient[i]<0):
                 gradient[i] = -1
             
@@ -50,7 +50,8 @@ def computeGradientDescent(s_idx, g_idx, nodes, d_, dim):
             
         print(cur_point)
         path.append([cur_point[0],cur_point[1],cur_point[2]])
-        idx = coordinatesToIndex(cur_coord, dim)    
+     
+        idx = coordinatesToIndex(cur_coord,d_, dim)    
         
     cur_coord=indexToCoordinates3D(idx, dim)
     
@@ -241,64 +242,124 @@ def Gradient(START, GOAL, nodes, d_):
     
     return path 
 
-def Gradient_3D(START, GOAL,nodeslist,nodes, dim):
+def Gradient_3D(START, GOAL,nodeslist,nodes, dim, seq):
     
     current_point =  [0.0,0.0,0.0]
-    path = []
-    step = 1.0
-    current = START
-    idx= current
+    path, pathcoord = [],[]
+    step1,step = 1.0,sqrt(2)
+    idx= START
+    print' cost ', nodeslist[idx].cost
     current_coord= indexToCoordinates3D(idx, dim)
-    
+    itera = 0
     current_point[0] = current_coord[0]
     current_point[1] = current_coord[1]
     current_point[2] = current_coord[2]
+
     path_velocity = []
     path.append([current_point[0],current_point[1],current_point[2]])
-    
-    path_velocity.append(nodeslist[nodes[idx].block][nodes[idx].idx])
-    grads = [0.0,0.0,0.0]
-    
-    print 'OFPS Execution ...', current_coord, current_point, idx, nodes[idx].TAG
+    pathcoord.append([current_coord[0],current_coord[1],current_coord[2]])
+    if seq==0:
         
-    while (idx !=GOAL):
-        block = nodes[idx].block    
-        grads[0] = -nodeslist[nodes[idx-1].block][nodes[idx-1].idx].cost/2+nodeslist[nodes[idx+1].block][nodes[idx+1].idx].cost/2 
+        return 0
+    elif seq==1:
+        c = 1#input('get ready (1) !')
+        while c !=1:
+            c = input('get ready (1) !')
+            
+        path_velocity.append(nodeslist[idx].v*10)
+        grads = [0.0,0.0,0.0]
+        
+        print 'OFPS Execution ...', idx, current_coord
+            
+        while (idx !=GOAL):
+            itera+=1 
+            grads[0] = -nodeslist[idx-1].cost/2+nodeslist[idx+1].cost/2 
+            #print 'x',round(nodeslist[idx-1].cost,3),round(nodeslist[idx+1].cost,3)
+            if (isinf(grads[0]) and grads[0]<0):
+                grads[0] = -1
+            elif (isinf(grads[0]) and grads[0]>0):
+                grads[0] = 1
+            
+            #max_grad = grads[0]
+            
+            
+            for i in range(1,3):
+               
+                grads[i]= (nodeslist[idx+d_[i-1]].cost/2)-(nodeslist[idx-d_[i-1]].cost/2)  
 
-        if (isinf(grads[0]) and grads[0]<0):
-            grads[0] = -1
-        elif (isinf(grads[0]) and grads[0]>0):
-            grads[0] = 1
-        
-        max_grad = grads[0]
-        
-        for i in range(1,dim):
-            grads[i]= (nodeslist[nodes[idx+d_[i-1]].block][nodes[idx+d_[i-1]].idx].cost/2)-(nodeslist[nodes[idx-d_[i-1]].block][nodes[idx-d_[i-1]].idx].cost/2)  
+                if (isinf(grads[i]) and grads[i]<0):
+                    grads[i] = -1
+                elif (isinf(grads[i]) and grads[i]>0):
+                    grads[i] = 1
+                
+                #if abs(max_grad)<abs(grads[i]):
+                #    max_grad = grads[i]
+            max_grad = sqrt(grads[0]*grads[0]+grads[1]*grads[1]+grads[2]*grads[2])
             
-            if (isinf(grads[i]) and grads[i]<0):
-                grads[i] = -1
-            elif (isinf(grads[i]) and grads[i]>0):
-                grads[i] = 1
+            for i in range(dim):
+                current_point[i] =round((current_point[i] - step1*grads[i]/abs(max_grad)),5)
+                current_coord[i] = int(current_point[i]+0.5)
+            print idx, current_point,current_coord#, coordCr
+                
+            pathcoord.append([current_coord[0],current_coord[1],current_coord[2]])       
+            path.append([round(current_point[0],3),round(current_point[1],3),round(current_point[2],3)])
+            path_velocity.append(nodeslist[idx].v*10)
+            idx = coordinatesToIndex(current_coord, d_, dim)
             
-            if abs(max_grad)<abs(grads[i]):
-                max_grad = grads[i]
-            print max_grad, grads[i]
-        
-        for i in range(dim):
-            current_point[i] =((current_point[i] - step*grads[i]/abs(max_grad)))
-            current_coord[i] = int(current_point[i]+0.5)
-        
+
+        current_coord=indexToCoordinates3D(idx, dim)
+        current_point[0] = current_coord[0]
+        current_point[1] = current_coord[1]
+        current_point[2] = current_coord[2]
         path.append([round(current_point[0],3),round(current_point[1],3),round(current_point[2],3)])
-        path_velocity.append(nodeslist[nodes[idx].block][nodes[idx].idx].v)
-        idx = coordinatesToIndex(current_coord, dim)        
-        print idx, current_coord, current_point
-       
-    current_coord=indexToCoordinates3D(idx, dim)
-    current_point[0] = current_coord[0]
-    current_point[1] = current_coord[1]
-    current_point[2] = current_coord[2]
-    path.append([round(current_point[0],3),round(current_point[1],3),round(current_point[2],3)])
-    path_velocity.append(nodeslist[nodes[idx].idx].v)
-    print 'Done !'
+        path_velocity.append(nodeslist[idx].v*10)
+        pathcoord.append([current_coord[0],current_coord[1],current_coord[2]])        
     
-    return path
+    elif seq==2:
+    
+        path_velocity.append(nodeslist[nodes[idx].block][nodes[idx].idx].indice)
+        grads = [0.0,0.0,0.0]
+        
+        print 'OFPS Execution ...', current_coord, current_point, idx, nodes[idx].TAG
+            
+        while (idx !=GOAL):
+              
+            grads[0] = -nodeslist[nodes[idx-1].block][nodes[idx-1].idx].cost/2+nodeslist[nodes[idx+1].block][nodes[idx+1].idx].cost/2 
+    
+            if (isinf(grads[0]) and grads[0]<0):
+                grads[0] = -1
+            elif (isinf(grads[0]) and grads[0]>0):
+                grads[0] = 1
+            
+            max_grad = grads[0]
+            
+            for i in range(1,dim):
+                grads[i]= (nodeslist[nodes[idx+d_[i-1]].block][nodes[idx+d_[i-1]].idx].cost/2)-(nodeslist[nodes[idx-d_[i-1]].block][nodes[idx-d_[i-1]].idx].cost/2)  
+                
+                if (isinf(grads[i]) and grads[i]<0):
+                    grads[i] = -1
+                elif (isinf(grads[i]) and grads[i]>0):
+                    grads[i] = 1
+                
+                if abs(max_grad)<abs(grads[i]):
+                    max_grad = grads[i]
+                
+            
+            for i in range(dim):
+                current_point[i] =((current_point[i] - step*grads[i]/abs(max_grad)))
+                current_coord[i] = int(current_point[i]+0.5)
+            
+            path.append([round(current_point[0],3),round(current_point[1],3),round(current_point[2],3)])
+            path_velocity.append(nodeslist[nodes[idx].block][nodes[idx].idx].v)
+            idx = coordinatesToIndex(current_coord, dim)        
+            print idx, current_coord, current_point
+           
+        current_coord=indexToCoordinates3D(idx, dim)
+        current_point[0] = current_coord[0]
+        current_point[1] = current_coord[1]
+        current_point[2] = current_coord[2]
+        path.append([round(current_point[0],3),round(current_point[1],3),round(current_point[2],3)])
+        path_velocity.append(nodeslist[nodes[idx].idx].v)
+    print 'Done !', path
+    
+    return path, path_velocity

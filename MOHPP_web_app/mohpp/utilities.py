@@ -9,10 +9,11 @@ from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from heapq import heappop
 from Tkinter import *
-import time
+import time, os, sys
 from multiprocessing import Queue
-from autobahn.twisted.util import sleep
-from matplotlib.projections import projection_registry
+from pylab import *
+from pygame import color
+
 
 global que
 que = Queue()
@@ -32,12 +33,13 @@ globalPath = []
 #d_ = [width, width*height]
 d_ =[width, width*height, width*height*depth] 
 d_parallels = [12,12*12,12*12*12]
-d_parallel = [10,100,500]
+d_parallel = [10,100,2000]
 
-def coordinatesToIndex(current_coordinates, dim = 3):
+def coordinatesToIndex(current_coordinates = [],d_ = [], dim = 3):
     
     idx = current_coordinates[0]
     for i in range(1,dim):
+        #print current_coordinates[i], d_[i-1]
         idx += current_coordinates[i] * d_[i-1]
 
     return idx
@@ -57,7 +59,6 @@ def indexToCoordinates(idx, d_ = [-1, -1]):
     current_coordinates[1] = int(floor(idx/d_[0]))
     current_coordinates[0] = (idx-current_coordinates[1]*d_[0])      
     return current_coordinates
-
 
 def getmaxcost(l):
 
@@ -92,7 +93,7 @@ def getNorth_East_Down(current, nextStep, down, default_altitude):
 
 def sqrt_dist(a,b,c = 0):
     
-    return round(sqrt(a*a+b*b+c*c),4)
+    return round(sqrt(a*a+b*b+c*c),7)
 
 def wavePlot(r= -1, r2= -1,nodes = [],path = [], start = [], goal = []):
     zVelocity = [[0 for _ in range(r)] for _ in range(r2)]
@@ -131,6 +132,7 @@ def isEmptyList(l):
     
     for i in l:
         if i !=[]:
+            #print i
             return False    
     return True
 
@@ -138,14 +140,23 @@ def locateBestIdx(l):
     
     b =(INFINI,INFINI)
     ids = -1
+    all = []
     for co,i in enumerate(l):
         if i !=[] and i[0]<b:
             b = i[0]
             ids = co
+        if i !=[]:    
+            all.append(i[0])
     #return the popped best element in the hosting list
+
     if ids!=-1:
-        return heappop(l[ids])
+        best = heappop(l[ids])
+        #print 'best and all ', best, l
+        return best
+        
+        
     else:
+        print 'NO best element '
         return -1
 
 def UavHeading(heading):
@@ -416,15 +427,16 @@ def drawTK(Nodes, path = globalPath):
             x= i  
     fenetre.mainloop()     
 
-def MAP3DShow(node, sobs,path = None):
+def MAP3DShow(node, sobs,path):
     x,y,z = [],[],[]
     x1,y1,z1 = [],[],[]
     coord = [-1,-1,-1]
+    maxcost = getmaxcost(node)
     
-    for i in sobs:
+    for i in node:
        
-        if node[i].OBSTACLE ==KNOWN_OBSTACLE:
-            coord=indexToCoordinates3D(i,3)
+        if i.OBSTACLE ==KNOWN_OBSTACLE:
+            coord=indexToCoordinates3D(i.indice,3)
     
             x.append(coord[0])
             y.append(coord[1])
@@ -447,7 +459,7 @@ def MAP3DShow(node, sobs,path = None):
     plt.xlim(0,201)
     plt.ylim(0,201)
     
-    s = ax.scatter3D(x,y,z,cmap='black')
+    s = ax.contour(x,y,z,c='black')
     
     s.set_edgecolors = s.setfacecolors = lambda *args:None
     
@@ -457,3 +469,321 @@ def MAP3DShow(node, sobs,path = None):
     
     plt.show()
 
+def Drawcurves(s0,s1,s2):
+    #print len(s1)   
+    #plt.ylim(0,2)
+    from scipy.interpolate import spline
+    
+    x = np.linspace(0,len(s0),len(s0))
+    #ps = spline(x,s0,x)
+    #plt.plot(x, ps)
+                
+    plt.plot(s0,'b',label = 'velocity')
+    #plt.plot(s1,'r', label = 'VZLHGS')
+    #plt.plot(s2,'g', label = 'BBMSFM')
+    
+    plt.ylabel('velocity (m/s)')
+    plt.xlabel('nodes')#(u'\u03B1 coefficient')
+    plt.title("Velocity profil")
+    plt.legend(loc='center left', shadow=False, fontsize='large')
+    plt.show()
+    
+    
+    return 0
+
+def view3D(x,y,z,c):
+    from matplotlib import cbook
+    from matplotlib import cm
+    from matplotlib.colors import LightSource
+    import matplotlib.pyplot as plt
+    import numpy as np
+    
+    
+    
+    """
+    import numpy as np
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    import matplotlib.tri as mtri   
+    
+    name_color_map = "blues" 
+    name_color_map_surface = 'Greens';  # Colormap for the 3D surface only.
+    index_x = 0; index_y = 1; index_z = 2; index_c = 3;
+    list_name_variables = ['x', 'y', 'z', 'c'];
+    fig = plt.figure(); 
+    ax = fig.add_subplot(111, projection='3d');
+    ax.set_xlabel(list_name_variables[index_x]); ax.set_ylabel(list_name_variables[index_y]);
+    ax.set_zlabel(list_name_variables[index_z]);
+    plt.title('%s in fcn of %s, %s and %s' % (list_name_variables[index_c], list_name_variables[index_x], list_name_variables[index_y], list_name_variables[index_z]) );
+    
+    # In this case, we will have 2 color bars: one for the surface and another for 
+    # the "scatter plot".
+    # For example, we can place the second color bar under or to the left of the figure.
+    choice_pos_colorbar = 2;
+    
+    #The scatter plot.
+    img = ax.scatter(x, y, z, c = c, cmap = name_color_map);
+    cbar = fig.colorbar(img, shrink=0.5, aspect=5); # Default location is at the 'right' of the figure.
+    cbar.ax.get_yaxis().labelpad = 15; cbar.ax.set_ylabel(list_name_variables[index_c], rotation = 270);
+    
+    # The 3D surface that serves only to connect the points to help visualize 
+    # the distances that separates them.
+    # The "alpha" is used to have some transparency in the surface.
+    surf = ax.plot_trisurf(x, y, z, cmap = name_color_map_surface, linewidth = 0.2, alpha = 0.25);
+    
+    # The second color bar will be placed at the left of the figure.
+    if choice_pos_colorbar == 1: 
+        #I am trying here to have the two color bars with the same size even if it 
+        #is currently set manually.
+        cbaxes = fig.add_axes([1-0.78375-0.1, 0.3025, 0.0393823, 0.385]);  # Case without tigh layout.
+        #cbaxes = fig.add_axes([1-0.844805-0.1, 0.25942, 0.0492187, 0.481161]); # Case with tigh layout.
+    
+        cbar = plt.colorbar(surf, cax = cbaxes, shrink=0.5, aspect=5);
+        cbar.ax.get_yaxis().labelpad = 15; cbar.ax.set_ylabel(list_name_variables[index_z], rotation = 90);
+    
+    # The second color bar will be placed under the figure.
+    elif choice_pos_colorbar == 2: 
+        cbar = fig.colorbar(surf, shrink=0.75, aspect=20,pad = 0.05, orientation = 'horizontal');
+        cbar.ax.get_yaxis().labelpad = 15; cbar.ax.set_xlabel(list_name_variables[index_z], rotation = 0);
+    #end
+    plt.show();    
+    """
+
+def MAP3Dplot(node, blk = None, path = None, seq = None):
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+    import numpy as np
+    
+    
+    maxvalue = 0
+    x, y, z, co = [],[],[],[]
+    if seq==0:
+        return 0
+    
+    elif seq==1:
+        anltic = []
+        maxvalue=getmaxcost(node)    
+        
+        print maxvalue
+           
+        for i in node:
+            #if i.OBSTACLE ==KNOWN_OBSTACLE:
+                coord=indexToCoordinates3D(i.indice,3)
+        
+                x.append(coord[0])
+                y.append(coord[1])
+                z.append(coord[2])
+                if i.cost>maxvalue:
+                    i.cost = maxvalue+15
+                co.append(i.cost)
+                anltic.append(i.anltic)
+        print len(x), len(co)
+        
+    elif seq==2:
+        for i in range(blk):
+            if maxvalue<getmaxcost(node[i]):    
+                maxvalue = getmaxcost(node[i])
+      
+        for j in range(blk):   
+            for i in node[j]:
+               
+                coord=indexToCoordinates3D(i.indice,3)
+        
+                x.append(coord[0])
+                y.append(coord[1])
+                z.append(coord[2])
+                co.append(i.v)
+        
+    x1,y1,z1 = [],[],[]
+    if len(path) != 0:
+        
+        for i in path:
+            x1.append(i[0])
+            y1.append(i[1])
+            z1.append(i[2])
+    
+    print('plotting')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    color_map = cm.ScalarMappable(cmap=cm.Blues_r)
+    clr = np.asarray(z)
+    color_map.set_array(clr)
+    plt.xlabel('x')
+    plt.ylabel('y')
+
+    ax.contourf(x,y,25, c= anltic)#, cmap=plt.hot())#,s = 100)#, color ='blue')  
+    #s = ax.scatter(x,y,c=anltic, cmap=plt.hot())
+    #s.set_array(co)
+    #for p in path:
+        
+    #    ax.plot3D(X[0],p[1],p[2],'orange',linewidth = 2)
+    #ax.plot3D(x1,y1,z1,'orange',linewidth= 2)
+    #plt.plot(x1[-2:-1],y1[-2:-1],z1[-2:-1],'go')
+    #plt.colorbar(color_map)
+    plt.show() 
+    print 'end'  
+    
+    """
+    co = []
+    for i in node:
+        if i.cost<INFINI:
+            co.append(i.cost)
+  
+  
+    
+    # create grid of x, y, z coordinates
+    x, y, z = np.meshgrid(np.arange(100), np.arange(100), np.arange(100))
+    
+    # calculate cost values
+    cost = co
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # plot contour
+    contour = ax.contour(x, y, z, cost, cmap='coolwarm')
+    fig.colorbar(contour, label='Cost')
+    
+    ax.set_xlabel('X Axis')
+    ax.set_ylabel('Y Axis')
+    ax.set_zlabel('Z Axis')
+    ax.set_title('3D Environment with Cost')
+    
+    plt.show()
+   
+    
+    
+     
+    """
+    """        
+    X, Y = np.meshgrid(np.asarray(x),np.asarray(y))
+    Z = np.asarray(z)#np.sinc(np.sqrt(X*X+Y*Y))
+    # this is the value to use for the color
+    V = np.asarray(c)
+    
+    # create the figure, add a 3d axis, set the viewing angle
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    
+    # here we create the surface plot, but pass V through a colormap
+    # to create a different color for each patch
+    ax.plot_surface(X, Y, Z,c=V, cmap = plt.hot())        
+    plt.show()  
+    """
+
+def saveMAP(a, ti, fold, file = "", seq=-1):
+
+    with open(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/"+fold+"/"+file+".txt"),'a') as mapfile:
+        
+        mapfile.write("%s-%s\n" %(str(a).strip(),str(ti).strip()))
+        mapfile.close()  
+        print 'map saved'
+    
+def loadTimeComptation(fold, fi, seq):
+    computation = []
+    if seq==0:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/"+fold+"/"+fi+".txt"),'r') as mapfile:
+            
+            content = mapfile.readlines()
+            
+            for l in content:
+            
+                _time =l.split('-')
+                computation.append(float(_time[1])) 
+ 
+            mapfile.close()  
+            print 'SEQ0: Time charged '
+            
+    else:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/seqBlk/"+"Seq_MAP.txt"),'r') as mapfile:
+            content = mapfile.readlines()
+            
+            for l in content:
+            
+                _time =l.split('-')
+                computation.append(float(_time[1]))
+ 
+            mapfile.close()  
+            print 'SEQ4: Time charged ',computation[0:10]
+    return computation        
+import pickle  
+import bz2   
+       
+def SavePklMap(PIK, nodes, fold = ""):#, seq = -1):
+    
+    #if seq==0:#one block exexution of MSFM
+    print 'dumping map...'
+    f= bz2.BZ2File(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/"+fold+"/"+PIK),"wb")
+    pickle.dump(nodes, f)
+    f.close()
+    print 'saved!'
+    """        
+    elif seq==1:
+        print 'dumping map...'
+        f= bz2.BZ2File(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/vblhgs/"+PIK),"wb")
+        pickle.dump(nodes, f)
+        f.close()
+        print 'saved!' 
+        
+    else:
+        print 'dumping map...'
+        f= bz2.BZ2File(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/seqBlk/"+PIK),"wb")
+        pickle.dump(nodes, f)
+        f.close()
+        print 'saved!'    
+    """
+     
+def loadPklMAP(PIK,fold):
+    print 'loading ', fold, PIK,'...'
+    t = time.time()
+    f= bz2.BZ2File(os.path.join(os.path.dirname(os.path.abspath(__file__))+"/../binarymaps/"+fold+"/"+PIK),"rb")
+    map = pickle.load(f)
+    f.close()
+    print 'loaded !', time.time()-t
+    #print map[0][0],map[20][45].cost 
+    return map
+    #time.sleep(1000000)
+
+def comparativestudy_CT():
+    
+    fm = loadTimeComptation("Fm", "Fm", 0)
+    #fms= loadTimeComptation("FmStar", "FmStar", 0)
+    #msfm= loadTimeComptation("MSFM", "MSFM", 0)
+    msfms= loadTimeComptation("MSFMStar", "MSFMStar", 0)
+    vzlhgs = loadTimeComptation("vblhgs", "vblhgs", 0) 
+    vzlhgss= loadTimeComptation("vblhgsStar", "vblhgsStar", 0)
+    bbmsfm= loadTimeComptation("bbMSFM", "bbMSFM", 0)
+    bbmsfms = loadTimeComptation("bbMSFMStar", "bbMSFMStar", 0)
+    plotResults(fm,msfms,vzlhgs,vzlhgss,bbmsfm,bbmsfms)
+
+def plotResults(*args):
+
+    #plt.ylim(0,160)
+
+    plt.ylabel('time (sec)')
+    plt.xlabel(u"\u03B1 (%)")
+    linestyleset = ['-','-','-','-',':','-.']
+    colorset = ['b','r','g','b','r','g']
+    labelset = ['fm','msfms','vblhgs','vblhgss','bbmsfm','bbmsfms']
+    for i,arg in enumerate(args):
+        plt.plot(arg, colorset[i], linestyle =linestyleset[i], label=labelset[i])
+    
+    """    
+    plt.plot(Rpiapp2[3], 'b', label='Rpi_FM* ')
+    plt.plot(Rpiapp2[1], 'r', label='Rpi_MSFM*')
+    plt.plot(Rpiapp2[5], 'g', label='Rpi_VBLHGS*')
+    
+    plt.plot(Nvidiaapp2[5], 'b', linestyle = '-.', label='Nvi_FM*') 
+    plt.plot(Nvidiaapp2[3], 'r', linestyle = '-.', label='Nvi_MSFM*')
+    plt.plot(Nvidiaapp2[0], 'g', linestyle = '-.', label='Nvi_VBLHGS*')
+    """
+       
+    plt.legend(loc='upper', shadow=False)
+    plt.show()   
+    
+def contourplot(*args):
+    return 0   
+    
+    
+    
